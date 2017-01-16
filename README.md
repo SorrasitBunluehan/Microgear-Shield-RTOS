@@ -121,5 +121,4 @@ void ICACHE_FLASH_ATTR user_init(void) {
 }
 
 ```
-# Microgear-Shield-RTOS
-# Microgear-Shield-RTOS
+
