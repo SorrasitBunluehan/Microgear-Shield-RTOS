@@ -2,6 +2,7 @@
 #include "Microgear.h"
 #include "ringbuf.h"
 #include "user_main.h"
+#include "string.h"
 #include "/home/moun/ESP8266_RTOS_SDK/include/lwip/ipv4/lwip/inet.h"
 
 // This code is alter old uart.c librar8y ->> xQueueUART = xQueueCreate(500, sizeof(uart_event_t)); from 32 to 500 size 
@@ -142,12 +143,12 @@ void recv_cb2(void *arg, char *pData, unsigned short len){
 
 /*	<|CLIENT1 CONNECTED CALLBACK|> */
 void connectCB1(void *arg) {
-	os_printf("MGS+CONNECTCLIENT1 CONNECTED!!!");
+	os_printf("%s CONNECTED!!!\n",CONNECT_TO_SERVER1_BY_CLIENT1);
 }
 
 /*	<|CLIENT2 CONNECTED CALLBACK|> */
 void connectCB2(void *arg) {
-	os_printf("MGS+CONNECTCLIENT2 CONNECTED!!!");
+	os_printf("%s CONNECTED!!!\n",CONNECT_TO_SERVER2_BY_CLIENT2);
 }
 
 /*	<|NETPIE CONNECTED CALLBACK|> */
@@ -246,12 +247,14 @@ void read_sr(void *pvParameters) {
 				n=0; 
 				param =0;				
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
-					if(xQueueHandleUart.param == 44 || xQueueHandleUart.param == 13 ){
+					if(xQueueHandleUart.param == 34){
 						param++;
 						n=0;
 						switch (param){
-							case 1: strcpy(ssid,message_sr);break;
-							case 2: strcpy(password,message_sr);break;
+							case 1: break;
+							case 2: strcpy(ssid,message_sr);break;
+							case 3: break;
+							case 4: strcpy(password,message_sr);break;
 						}
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
@@ -275,25 +278,27 @@ void read_sr(void *pvParameters) {
 				message_sr[0] = '\0';
 				param=0;
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
-					if(xQueueHandleUart.param == 44 || xQueueHandleUart.param == 13 ){
+					if(xQueueHandleUart.param == 34 || xQueueHandleUart.param == 13 || xQueueHandleUart.param == 44 ){
 						param++;
 						n=0;
 						switch (param){
-							case 1: strcpy(host,message_sr);break;
-							case 2: 
-							port = atoi(message_sr);		
-							conn1.proto.tcp->remote_port = port;
-							if(espconn_gethostbyname(&conn1, host, &HostResolve_Ip1, ResolveDNS_for_conn1) == ESPCONN_OK){
-								memcpy(conn1.proto.tcp->remote_ip, &HostResolve_Ip1, 4);
-								espconn_connect(&conn1);
-							}
+							case 1:break;
+							case 2:strcpy(host,message_sr);break;
+							case 3:break;
+							case 4: 
+								port = atoi(message_sr);		
+								conn1.proto.tcp->remote_port = port;
+								if(espconn_gethostbyname(&conn1, host, &HostResolve_Ip1, ResolveDNS_for_conn1) == ESPCONN_OK){
+									memcpy(conn1.proto.tcp->remote_ip, &HostResolve_Ip1, 4);
+									espconn_connect(&conn1);
+								}
 							break;
 						}
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
 						message_sr[n]=0;
 					}
-					vTaskDelay(100/ portTICK_RATE_MS);		
+					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
 			}
 			
@@ -305,12 +310,14 @@ void read_sr(void *pvParameters) {
 				message_sr[0] = '\0';
 				param = 0;
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
-					if(xQueueHandleUart.param == 44 || xQueueHandleUart.param == 13 ){
+					if(xQueueHandleUart.param == 34 || xQueueHandleUart.param == 13 || xQueueHandleUart.param == 44){
 						param++;
 						n=0;
 						switch (param){
-							case 1: strcpy(host,message_sr);break;
-							case 2: 
+							case 1: break;
+							case 2: strcpy(host,message_sr);break;
+							case 3: break;
+							case 4: 
 							port = atoi(message_sr);		
 							conn2.proto.tcp->remote_port = port;
 							if(espconn_gethostbyname(&conn2, host, &HostResolve_Ip2, ResolveDNS_for_conn2) == ESPCONN_OK){
@@ -323,25 +330,8 @@ void read_sr(void *pvParameters) {
 						message_sr[n++] = xQueueHandleUart.param;
 						message_sr[n]=0;
 					}
-					//~ if(xQueueHandleUart.param == 44){
-						//~ n=0;
-						//~ strncpy(host, message_sr,25);
-						//~ os_printf("Destination Host: %s\n",&host);
-					//~ }else if(xQueueHandleUart.param == 13){   
-						//~ port = atoi(message_sr);		
-						//~ os_printf("Port: %d\n",port);
-						//~ conn2.proto.tcp->remote_port = port;
-						//~ if(espconn_gethostbyname(&conn2, host, &HostResolve_Ip2, ResolveDNS_for_conn2) == ESPCONN_OK){
-							//~ memcpy(conn2.proto.tcp->remote_ip, &HostResolve_Ip2, 4);
-							//~ espconn_connect(&conn2);
-						//~ }
-					//~ }else{
-						//~ message_sr[n++] = xQueueHandleUart.param;
-						//~ message_sr[n]=0;
-					//~ }
-					vTaskDelay(100/ portTICK_RATE_MS);		
+					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
-				os_printf("Connect to server by client2\nServer:%s\nPort:%d\n",host,port);	
 			}
 			
 			/*	<|CLIENT1 DISCONNECT|>	*/
@@ -387,21 +377,28 @@ void read_sr(void *pvParameters) {
 			if(strcmp(message_sr,PRINT_TO_SERVER1)==0){
 				char *data_to_send = (char*) malloc (sizeof(char)* MAX_SIZE_TCP_PRINT);
 				n=0;
-				
-				while((xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS)){	
-					if(xQueueHandleUart.param == 13){   
-						os_printf("Data: %s\n",data_to_send);
-						if(!(espconn_send(&conn1,data_to_send,n))){
-							os_printf("Send complete \n");				
-						}else{
-							os_printf("Can't send\n");
+				param =0;
+				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
+					if(xQueueHandleUart.param == 34){
+						param++;
+						switch (param){
+							case 1:break;
+							case 2:
+								os_printf("Data: %s\n",data_to_send);
+								if(!(espconn_send(&conn1,data_to_send,n))){
+									os_printf("Send complete \n");				
+								}else{
+									os_printf("Can't send\n");
+								}
+								free(data_to_send);
+								n=0;
+								break;
 						}
-						free(data_to_send);
 					}else{
 						data_to_send[n++] = xQueueHandleUart.param;
 						data_to_send[n]=0;
-					}		
-					vTaskDelay(10/ portTICK_RATE_MS);
+					}
+					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
 			}
 			
@@ -412,70 +409,106 @@ void read_sr(void *pvParameters) {
 			if(strcmp(message_sr,PRINT_TO_SERVER2)==0){
 				char *data_to_send = (char*) malloc (sizeof(char)* MAX_SIZE_TCP_PRINT);
 				n=0;
-				while((xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS)){	
-					if(xQueueHandleUart.param == 13){   
-						os_printf("Data: %s\n",data_to_send);
-						if(!(espconn_send(&conn2,data_to_send,n))){
-							os_printf("Send complete \n");				
-						}else{
-							os_printf("Can't send\n");
+				param =0;
+				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
+					if(xQueueHandleUart.param == 34){
+						param++;	
+						switch (param){
+							case 1:break;
+							case 2:
+								os_printf("Data: %s\n",data_to_send);
+								if(!(espconn_send(&conn2,data_to_send,n))){
+									os_printf("Send complete \n");				
+								}else{
+									os_printf("Can't send\n");
+								}
+								free(data_to_send);
+								n=0;
+								break;
 						}
-						free(data_to_send);
 					}else{
 						data_to_send[n++] = xQueueHandleUart.param;
 						data_to_send[n]=0;
-					}		
-					vTaskDelay(10/ portTICK_RATE_MS);
+					}
+					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
 			}
 			
 			/* <|READ DATA FROM CLIENT1|> */
 			if(strcmp(message_sr,READ_DATA_FROM_CLIENT1_BUFFER)==0){
 				char num_to_send[5];
+				int for_loop_count,x;
 				n=0;
-				while((xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS)){	
+				param = 0;
+				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
 					if(xQueueHandleUart.param == 13){
-						int for_loop_count = atoi(num_to_send);
-						int x;
-						for(x = 0;x<for_loop_count;x++){   		
-							if(!ringBufS_empty(&data_from_conn1)){
-								os_printf("%c",ringBufS_get(&data_from_conn1));
-							}
-						}	
+						param++;
+						switch (param){
+							case 1:
+								for_loop_count = atoi(num_to_send);
+								for(x = 0;x<for_loop_count;x++){   		
+									if(!ringBufS_empty(&data_from_conn1)){
+										os_printf("%c",ringBufS_get(&data_from_conn1));
+									}
+								}
+							n=0;	
+							break;
+						}
 					}else{
 						num_to_send[n++] = xQueueHandleUart.param;
 						num_to_send[n]=0;
-					}	
-						
-					vTaskDelay(10/ portTICK_RATE_MS);
+					}
+					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
 			}
 			
 			/* <|READ DATA FROM CLIENT2|> */
 			if(strcmp(message_sr,READ_DATA_FROM_CLIENT2_BUFFER)==0){
 				char num_to_send[5];
+				int for_loop_count,x;
 				n=0;
-				while((xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS)){	
+				param =0;
+				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
 					if(xQueueHandleUart.param == 13){
-						int for_loop_count = atoi(num_to_send);
-						int x;
-						
-						for(x = 0;x<for_loop_count;x++){ 
-							if(!ringBufS_empty(&data_from_conn2)){  		
-								os_printf("%c",ringBufS_get(&data_from_conn2));
-							}
-						}															
+						param++;
+						switch (param){
+							case 1:
+								for_loop_count = atoi(num_to_send);
+								for(x = 0;x<for_loop_count;x++){ 
+									if(!ringBufS_empty(&data_from_conn2)){  		
+										os_printf("%c",ringBufS_get(&data_from_conn2));
+									}
+								}
+								n=0;					
+								break;
+						}
 					}else{
 						num_to_send[n++] = xQueueHandleUart.param;
 						num_to_send[n]=0;
-					}		
-					vTaskDelay(10/ portTICK_RATE_MS);
+					}
+					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
 			}
 				
-			/*	<|MICROGEAR CONNECT|> */
-			if(strcmp(message_sr,CONNECT_TO_NETPIE)==0){
+			/* <|CLIENT SECURE CONNECTION CONNECT|> */
+			if(strcmp(message_sr,SECURE_CONNECT)==0){
 				
+			}
+			/* <|CLIENT SECURE CONNECTION CONNECTED|> */
+			if(strcmp(message_sr,SECURE_CONNECTED)==0){
+			}
+			/* <|CLIENT SECURE VARIFY FOOTPRINT|> */
+			if(strcmp(message_sr,SECURE_VERIFY)==0){
+			}
+			/* <|CLIENT SECURE READ|> */
+			if(strcmp(message_sr,SECURE_READ)==0){
+			}
+			/* <|CLIENT SECURE PRINT|> */
+			if(strcmp(message_sr,SECURE_PRINT)==0){
+			}	
+			
+			/*	<|MICROGEAR CONNECT|> */		
+			if(strcmp(message_sr,CONNECT_TO_NETPIE)==0){	
 				microgear_connect(&mg,appid);
 				microgear_on(&mg, CONNECTED, onConnected);
 				microgear_on(&mg, MESSAGE, onMsghandler);
@@ -494,12 +527,14 @@ void read_sr(void *pvParameters) {
 				param=0;
 				message_sr[0] = '\0';
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
-					if(xQueueHandleUart.param == 44 || xQueueHandleUart.param == 13 ){
+					if(xQueueHandleUart.param == 34){
 						param++;
 						n=0;
 						switch (param){
-							case 1: strcpy(token,message_sr);break;
-							case 2: strcpy(tokensecret,message_sr);break;
+							case 1: break;
+							case 2:	strcpy(token,message_sr);break;
+							case 3: break;
+							case 4: strcpy(tokensecret,message_sr);break;
 						}
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
@@ -521,14 +556,18 @@ void read_sr(void *pvParameters) {
 				alias[0] = '\0';
 				message_sr[0]= '\0';
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){
-					if(xQueueHandleUart.param == 44 || xQueueHandleUart.param == 13 ){
+					if(xQueueHandleUart.param == 34 ){
 						param++;
 						n=0;
 						switch (param){
-							case 1: strcpy(appid,message_sr);break;
-							case 2: strcpy(key,message_sr);break;
-							case 3: strcpy(secret,message_sr);break;
-							case 4: strcpy(alias,message_sr);break;
+							case 1: break;
+							case 2: strcpy(appid,message_sr);break;
+							case 3: break;
+							case 4: strcpy(key,message_sr);break;
+							case 5: break;
+							case 6: strcpy(secret,message_sr);break;
+							case 7: break;
+							case 8: strcpy(alias,message_sr);break;
 						}
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
@@ -544,11 +583,18 @@ void read_sr(void *pvParameters) {
 			if(strcmp(message_sr,SET_ALIAS_NAME)==0){
 				n=0;
 				message_sr[0] = '\0';
+				param = 0;
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
-					if(xQueueHandleUart.param == 13){   												
+					if(xQueueHandleUart.param == 34){ 
+						param++;  												
 						n=0;
-						os_printf("Set alias name to: %s\n",message_sr);
-						microgear_setAlias(&mg, message_sr);											
+						switch (param){
+							case 1: break;
+							case 2:	
+								os_printf("Set alias name to: %s\n",message_sr);
+								microgear_setAlias(&mg, message_sr);	
+								break;
+						}										
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
 						message_sr[n]=0;
@@ -567,12 +613,14 @@ void read_sr(void *pvParameters) {
 				topic[0] = '\0';
 				data_pub[0] = '\0';
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){
-					if(xQueueHandleUart.param == 44 || xQueueHandleUart.param == 13 ){
+					if(xQueueHandleUart.param == 44 || xQueueHandleUart.param == 34 ){
 						param++;
 						n=0;
 						switch (param){
-							case 1: strcpy(topic,message_sr);break;
-							case 2: strcpy(data_pub,message_sr);break;
+							case 1: break;
+							case 2: strcpy(topic,message_sr);break;
+							case 3: break;
+							case 4:	strcpy(data_pub,message_sr);break;
 						}
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
@@ -587,10 +635,18 @@ void read_sr(void *pvParameters) {
 			if(strcmp(message_sr,SUBSCRIBE)==0){
 				n=0;
 				message_sr[0] = '\0';
+				param=0;
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
-					if(xQueueHandleUart.param == 13){
-						os_printf("Subscribe topic: %s\n",message_sr);
-						microgear_subscribe(&mg, message_sr);												
+					if(xQueueHandleUart.param == 34){
+						param++;
+						n=0;
+						switch (param){
+							case 1: break;
+							case 2: 
+								os_printf("Subscribe topic: %s\n",message_sr);
+								microgear_subscribe(&mg, message_sr);
+								break;
+						}												
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
 						message_sr[n]=0;
@@ -604,10 +660,16 @@ void read_sr(void *pvParameters) {
 				n=0;
 				message_sr[0] = '\0';
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
-					if(xQueueHandleUart.param == 13){
+					if(xQueueHandleUart.param == 34){
 						n=0;
-						os_printf("Unsubscribe topic: %s\n",message_sr);
-						microgear_unsubscribe(&mg, message_sr);												
+						param++;
+						switch(param) {
+							case 1: break;
+							case 2: 
+								os_printf("Unsubscribe topic: %s\n",message_sr);
+								microgear_unsubscribe(&mg, message_sr);		
+								break;
+						}										
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
 						message_sr[n]=0;
@@ -625,12 +687,14 @@ void read_sr(void *pvParameters) {
 				alias[0] = '\0';
 				int param =0;
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){
-					if(xQueueHandleUart.param == 44 || xQueueHandleUart.param == 13 ){
+					if(xQueueHandleUart.param == 34){
 						param++;
 						n=0;
 						switch (param){
-							case 1: strcpy(alias,message_sr);break;
-							case 2: strcpy(payload,message_sr);break;
+							case 1: break;
+							case 2: strcpy(alias,message_sr);break;
+							case 3: break;
+							case 4: strcpy(payload,message_sr);break;
 						}
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
@@ -640,6 +704,7 @@ void read_sr(void *pvParameters) {
 				}
 				microgear_chat(&mg, alias, payload);
 			}
+			
 			
 			vTaskDelay(10 / portTICK_RATE_MS);
 		}
