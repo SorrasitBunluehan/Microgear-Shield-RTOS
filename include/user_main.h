@@ -1,5 +1,14 @@
- #ifndef __USER_MAIN_H
-    #define __USER_MAIN_H
+#ifndef __USER_MAIN_H
+#define __USER_MAIN_H
+
+#include "uart.h"
+#include "Microgear.h"
+#include "ringbuf.h"
+#include "string.h"
+#include "lwip/inet.h"
+#include "var.h"
+#include "wifi_task.h"
+
 
 #define SETUPWIFI "AT+CW "									//AT+CW "<SSID>","<PASS>"
 #define CHECKSTATUS_WIFI "AT+CW?"							//AT+CW?
@@ -28,10 +37,10 @@
 #define SETUP_TOKEN "AT+MGST "								//AT+MGST "RKJy30tYkUKoXa7G","oWfxRNqRaXdwffVdFvuU27qJqr1KNpIy"
 #define INIT_MICROGEAR "AT+MGIN "							//AT+MGIN "HelloNetpie1","YhtHPvlmMxL5yJB","YphWgyUI31q8sEMu6qtNrIPn1","Light_control"
 #define SET_ALIAS_NAME "AT+MGSA "							//AT+MGSA "ALIAS_NEW"
-#define PUBLISH "AT+MGP "									//AT+MGP <TOPIC>,"<PAYLOAD>"
-#define SUBSCRIBE "AT+MGS "									//AT+MGS <TOPIC>   
-#define UNSUBSCRIBE "AT+MGUS "								//AT+MGUS <TOPIC>
-#define CHAT "AT+MGC "										//AT+MGC "<GEARID>","<PAYLOAD>"
+#define PUBLISH "AT+MGP "									//AT+MGP "<TOPIC>","<PAYLOAD>"
+#define SUBSCRIBE "AT+MGS "									//AT+MGS "<TOPIC>"  
+#define UNSUBSCRIBE "AT+MGUS "								//AT+MGUS "<TOPIC>"
+#define CHAT "AT+MGC "										//AT+MGC "<ALIAS>","<PAYLOAD>"
 
 #define MAX_SIZE_TCP_PRINT 500
 #define MAX_SIZE_TCP_RECEV 500

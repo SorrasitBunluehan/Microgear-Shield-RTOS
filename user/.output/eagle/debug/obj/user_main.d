@@ -1,4 +1,4 @@
-.output/eagle/debug/obj/user_main.o .output/eagle/debug/obj/user_main.d : user_main.c ../include/uart.h \
+.output/eagle/debug/obj/user_main.o .output/eagle/debug/obj/user_main.d : user_main.c ../include/user_main.h ../include/uart.h \
  /home/moun/ESP8266_RTOS_SDK/include/freertos/FreeRTOS.h \
  /home/moun/esp-open-sdk/xtensa-lx106-elf/lib/gcc/xtensa-lx106-elf/4.8.5/include/stddef.h \
  /home/moun/ESP8266_RTOS_SDK/include/freertos/projdefs.h \
@@ -99,5 +99,6 @@
  ../Microgear/MQTTClient/MQTTFormat.h \
  ../Microgear/MQTTClient/StackTrace.h \
  ../Microgear/MQTTClient/MQTTESP8266.h ../Microgear/base64.h \
- ../include/ringbuf.h ../include/user_main.h \
- /home/moun/ESP8266_RTOS_SDK/include/lwip/ipv4/lwip/inet.h
+ ../include/ringbuf.h \
+ /home/moun/ESP8266_RTOS_SDK/include/lwip/ipv4/lwip/inet.h \
+ ../include/var.h ../include/wifi_task.h

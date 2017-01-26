@@ -1,121 +1,122 @@
-#include "uart.h"
-#include "Microgear.h"
-#include "ringbuf.h"
+//~ #include "uart.h"
+//~ #include "Microgear.h"
+//~ #include "ringbuf.h"
 #include "user_main.h"
-#include "string.h"
-#include "/home/moun/ESP8266_RTOS_SDK/include/lwip/ipv4/lwip/inet.h"
+//~ #include "string.h"
+//~ #include "lwip/inet.h"
+
 
 // This code is alter old uart.c librar8y ->> xQueueUART = xQueueCreate(500, sizeof(uart_event_t)); from 32 to 500 size 
 
 
-/* <|Global variable declaration|>
- * 
- * 	- WifiReady : semaphore handler use to indicate the ready state of wifi
- * 	- SetWifi : semaphore handler use to set up ssid and password
- * 	- xQueueHandleUart : Queue use to handle Uart packet
- *  - data_from_conn(x) : Buffer for TCP stack 	
- */
+//~ /* <|Global variable declaration|>
+ //~ * 
+ //~ * 	- WifiReady : semaphore handler use to indicate the ready state of wifi
+ //~ * 	- SetWifi : semaphore handler use to set up ssid and password
+ //~ * 	- xQueueHandleUart : Queue use to handle Uart packet
+ //~ *  - data_from_conn(x) : Buffer for TCP stack 	
+ //~ */
  
-extern xQueueHandle xQueueUART;
+//~ extern xQueueHandle xQueueUART;
 
-Microgear mg;
-xSemaphoreHandle WifiReady;
-xSemaphoreHandle SetWifi;
-uart_event_t xQueueHandleUart;
-ringBufS data_from_conn1,data_from_conn2;
-char ssid[25],password[25],token[50],tokensecret[50],appid[50],key[50],secret[50],alias[50];
-struct ip_info ipconfig;				//Use to get IP address of ESP8266
+//~ Microgear mg;
+//~ xSemaphoreHandle WifiReady;
+//~ xSemaphoreHandle SetWifi;
+//~ uart_event_t xQueueHandleUart;
+//~ ringBufS data_from_conn1,data_from_conn2;
+//~ char ssid[25],password[25],token[50],tokensecret[50],appid[50],key[50],secret[50],alias[50];
+//~ struct ip_info ipconfig;				//Use to get IP address of ESP8266
 
-/* <|TCP variables declaration|>
- *	
- * 	- conn0 reserve for Microgear				
- * 	- conn1 and conn2 for tcp communication	
- * 
- */ 
-struct espconn conn0,conn1,conn2;
-esp_tcp tcp0,tcp1,tcp2;
-ip_addr_t HostResolve_Ip0,HostResolve_Ip1,HostResolve_Ip2;
+//~ /* <|TCP variables declaration|>
+ //~ *	
+ //~ * 	- conn0 reserve for Microgear				
+ //~ * 	- conn1 and conn2 for tcp communication	
+ //~ * 
+ //~ */ 
+//~ struct espconn conn0,conn1,conn2;
+//~ esp_tcp tcp0,tcp1,tcp2;
+//~ ip_addr_t HostResolve_Ip0,HostResolve_Ip1,HostResolve_Ip2;
 
 
 
-/**********************************************************************************************************************
-*											 WIFI PART																  *
-***********************************************************************************************************************/
+//~ /**********************************************************************************************************************
+//~ *											 WIFI PART																  *
+//~ ***********************************************************************************************************************/
 
-//~ /* <| WiFi task |> */
-LOCAL void ICACHE_FLASH_ATTR wifi_task(void *pvParameters){
-	while(1){
-		uint8_t status;
-		if( xSemaphoreTake( SetWifi, 0 ) == pdTRUE )
-		{
-			struct station_config *config = (struct station_config *)zalloc(sizeof(struct station_config));
-			sprintf(config->ssid, ssid);
-			sprintf(config->password, password);
-			wifi_station_set_config(config);
-			free(config);
+/* <| WiFi task |> */
+//~ LOCAL void ICACHE_FLASH_ATTR wifi_task(void *pvParameters){
+	//~ while(1){
+		//~ uint8_t status;
+		//~ if( xSemaphoreTake( SetWifi, 0 ) == pdTRUE )
+		//~ {
+			//~ struct station_config *config = (struct station_config *)zalloc(sizeof(struct station_config));
+			//~ sprintf(config->ssid, ssid);
+			//~ sprintf(config->password, password);
+			//~ wifi_station_set_config(config);
+			//~ free(config);
 			
 			
-			os_printf("WiFi: Connecting to WiFi\n");
-			wifi_station_connect();
+			//~ os_printf("WiFi: Connecting to WiFi\n");
+			//~ wifi_station_connect();
 			
-			status = wifi_station_get_connect_status();
-			int8_t retries = 30;
-			while ((wifi_station_get_connect_status() != STATION_GOT_IP) && (retries > 0)) {
-				status = wifi_station_get_connect_status();
-				if (status == STATION_WRONG_PASSWORD) {
-					os_printf("WRONG PASSWORD\n");
-					break;
-				}
-				else if (status == STATION_NO_AP_FOUND) {
-					os_printf("AP NOT FOUND\n");
-					break;
-				}
-				else if (status == STATION_CONNECT_FAIL) {
-					os_printf("CONNECTION FAIL\n");
-					break;
-				}
-				vTaskDelay(1000 / portTICK_RATE_MS);
-				--retries;
-			}
-			if ((status = wifi_station_get_connect_status()) == STATION_GOT_IP) {
-				wifi_get_ip_info(STATION_IF, &ipconfig);
-				os_printf("CONNECTED %d.%d.%d.%d\n", IP2STR(&ipconfig.ip));
-				vTaskDelay(1000 / portTICK_RATE_MS);
-			}
-		}
-		vTaskDelay(1000 / portTICK_RATE_MS);
+			//~ status = wifi_station_get_connect_status();
+			//~ int8_t retries = 30;
+			//~ while ((wifi_station_get_connect_status() != STATION_GOT_IP) && (retries > 0)) {
+				//~ status = wifi_station_get_connect_status();
+				//~ if (status == STATION_WRONG_PASSWORD) {
+					//~ os_printf("WRONG PASSWORD\n");
+					//~ break;
+				//~ }
+				//~ else if (status == STATION_NO_AP_FOUND) {
+					//~ os_printf("AP NOT FOUND\n");
+					//~ break;
+				//~ }
+				//~ else if (status == STATION_CONNECT_FAIL) {
+					//~ os_printf("CONNECTION FAIL\n");
+					//~ break;
+				//~ }
+				//~ vTaskDelay(1000 / portTICK_RATE_MS);
+				//~ --retries;
+			//~ }
+			//~ if ((status = wifi_station_get_connect_status()) == STATION_GOT_IP) {
+				//~ wifi_get_ip_info(STATION_IF, &ipconfig);
+				//~ os_printf("CONNECTED %d.%d.%d.%d\n", IP2STR(&ipconfig.ip));
+				//~ vTaskDelay(1000 / portTICK_RATE_MS);
+			//~ }
+		//~ }
+		//~ vTaskDelay(1000 / portTICK_RATE_MS);
 		
-	}
-vTaskDelete( NULL );
-}
+	//~ }
+//~ vTaskDelete( NULL );
+//~ }
  
-/* <| Check status Wifi |> */
-void checkstatus() {
-	if( xSemaphoreTake( WifiReady, 0 ) == pdTRUE )
-	{
-		uint8_t status; 
-		status = wifi_station_get_connect_status();
-		if(status == STATION_GOT_IP){
-			wifi_get_ip_info(STATION_IF, &ipconfig);
-			os_printf("CONNECTED %d.%d.%d.%d\n", IP2STR(&ipconfig.ip));
-		}else{
-			os_printf("DISCONNECTED\n");
-		}
-	}
-}
+//~ /* <| Check status Wifi |> */
+//~ void checkstatus() {
+	//~ if( xSemaphoreTake( WifiReady, 0 ) == pdTRUE )
+	//~ {
+		//~ uint8_t status; 
+		//~ status = wifi_station_get_connect_status();
+		//~ if(status == STATION_GOT_IP){
+			//~ wifi_get_ip_info(STATION_IF, &ipconfig);
+			//~ os_printf("CONNECTED %d.%d.%d.%d\n", IP2STR(&ipconfig.ip));
+		//~ }else{
+			//~ os_printf("DISCONNECTED\n");
+		//~ }
+	//~ }
+//~ }
  
-/* <| Need for handle function inside microgear.h |> */ 
-void give_wifi_semaphore(void *pvParameters){
-	while(1){
-		while ( wifi_station_get_connect_status()== STATION_GOT_IP) {
-				xSemaphoreGive(WifiReady);
-				//os_printf("WiFi: Alive\n");
-				vTaskDelay(1000 / portTICK_RATE_MS);
-		}
-		vTaskDelay(100 / portTICK_RATE_MS);
-	}
-	vTaskDelete( NULL );
-}
+//~ /* <| Need for handle function inside microgear.h |> */ 
+//~ void give_wifi_semaphore(void *pvParameters){
+	//~ while(1){
+		//~ while ( wifi_station_get_connect_status()== STATION_GOT_IP) {
+				//~ xSemaphoreGive(WifiReady);
+				//~ //os_printf("WiFi: Alive\n");
+				//~ vTaskDelay(1000 / portTICK_RATE_MS);
+		//~ }
+		//~ vTaskDelay(100 / portTICK_RATE_MS);
+	//~ }
+	//~ vTaskDelete( NULL );
+//~ }
 
 
 /**********************************************************************************************************************
@@ -247,14 +248,15 @@ void read_sr(void *pvParameters) {
 				n=0; 
 				param =0;				
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
-					if(xQueueHandleUart.param == 34){
+					if(xQueueHandleUart.param == 34 || xQueueHandleUart.param == 44){
 						param++;
 						n=0;
 						switch (param){
 							case 1: break;
 							case 2: strcpy(ssid,message_sr);break;
 							case 3: break;
-							case 4: strcpy(password,message_sr);break;
+							case 4: break;
+							case 5: strcpy(password,message_sr);break;
 						}
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
@@ -493,16 +495,21 @@ void read_sr(void *pvParameters) {
 			/* <|CLIENT SECURE CONNECTION CONNECT|> */
 			if(strcmp(message_sr,SECURE_CONNECT)==0){
 				
+				
 			}
+			
 			/* <|CLIENT SECURE CONNECTION CONNECTED|> */
 			if(strcmp(message_sr,SECURE_CONNECTED)==0){
 			}
+			
 			/* <|CLIENT SECURE VARIFY FOOTPRINT|> */
 			if(strcmp(message_sr,SECURE_VERIFY)==0){
 			}
+			
 			/* <|CLIENT SECURE READ|> */
 			if(strcmp(message_sr,SECURE_READ)==0){
 			}
+			
 			/* <|CLIENT SECURE PRINT|> */
 			if(strcmp(message_sr,SECURE_PRINT)==0){
 			}	
@@ -527,14 +534,15 @@ void read_sr(void *pvParameters) {
 				param=0;
 				message_sr[0] = '\0';
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
-					if(xQueueHandleUart.param == 34){
+					if(xQueueHandleUart.param == 34 || xQueueHandleUart.param == 44){
 						param++;
 						n=0;
 						switch (param){
 							case 1: break;
 							case 2:	strcpy(token,message_sr);break;
 							case 3: break;
-							case 4: strcpy(tokensecret,message_sr);break;
+							case 4: break;
+							case 5: strcpy(tokensecret,message_sr);break;
 						}
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
@@ -556,18 +564,21 @@ void read_sr(void *pvParameters) {
 				alias[0] = '\0';
 				message_sr[0]= '\0';
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){
-					if(xQueueHandleUart.param == 34 ){
+					if(xQueueHandleUart.param == 34 || xQueueHandleUart.param == 44 ){
 						param++;
 						n=0;
 						switch (param){
 							case 1: break;
 							case 2: strcpy(appid,message_sr);break;
 							case 3: break;
-							case 4: strcpy(key,message_sr);break;
-							case 5: break;
-							case 6: strcpy(secret,message_sr);break;
+							case 4: break;
+							case 5: strcpy(key,message_sr);break;
+							case 6: break;
 							case 7: break;
-							case 8: strcpy(alias,message_sr);break;
+							case 8: strcpy(secret,message_sr);break;
+							case 9: break;
+							case 10: break;
+							case 11: strcpy(alias,message_sr);break;
 						}
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
@@ -620,7 +631,8 @@ void read_sr(void *pvParameters) {
 							case 1: break;
 							case 2: strcpy(topic,message_sr);break;
 							case 3: break;
-							case 4:	strcpy(data_pub,message_sr);break;
+							case 4: break;
+							case 5:	strcpy(data_pub,message_sr);break;
 						}
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
@@ -687,14 +699,15 @@ void read_sr(void *pvParameters) {
 				alias[0] = '\0';
 				int param =0;
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){
-					if(xQueueHandleUart.param == 34){
+					if(xQueueHandleUart.param == 34 || xQueueHandleUart.param == 44){
 						param++;
 						n=0;
 						switch (param){
 							case 1: break;
 							case 2: strcpy(alias,message_sr);break;
 							case 3: break;
-							case 4: strcpy(payload,message_sr);break;
+							case 4: break;
+							case 5: strcpy(payload,message_sr);break;
 						}
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
@@ -704,7 +717,6 @@ void read_sr(void *pvParameters) {
 				}
 				microgear_chat(&mg, alias, payload);
 			}
-			
 			
 			vTaskDelay(10 / portTICK_RATE_MS);
 		}
