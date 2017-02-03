@@ -16,6 +16,7 @@ xSemaphoreHandle WifiReady;
 xSemaphoreHandle SetWifi;
 uart_event_t xQueueHandleUart;
 ringBufS data_from_conn1,data_from_conn2;
+
 char ssid[25],password[25],token[50],tokensecret[50],appid[50],key[50],secret[50],alias[50];
 struct ip_info ipconfig;				//Use to get IP address of ESP8266
 

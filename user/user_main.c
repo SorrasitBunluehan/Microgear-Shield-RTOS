@@ -144,12 +144,12 @@ void recv_cb2(void *arg, char *pData, unsigned short len){
 
 /*	<|CLIENT1 CONNECTED CALLBACK|> */
 void connectCB1(void *arg) {
-	os_printf("%s CONNECTED!!!\n",CONNECT_TO_SERVER1_BY_CLIENT1);
+	os_printf("CONNECTED\n",CONNECT_TO_SERVER1_BY_CLIENT1);
 }
 
 /*	<|CLIENT2 CONNECTED CALLBACK|> */
 void connectCB2(void *arg) {
-	os_printf("%s CONNECTED!!!\n",CONNECT_TO_SERVER2_BY_CLIENT2);
+	os_printf("CONNECTED\n",CONNECT_TO_SERVER2_BY_CLIENT2);
 }
 
 /*	<|NETPIE CONNECTED CALLBACK|> */
@@ -464,6 +464,40 @@ void read_sr(void *pvParameters) {
 				}
 			}
 			
+			/* <|READ DATA FROM CLIENT1 TO ARDUINO|> */
+			if(strcmp(message_sr,READ_DATA_FROM_CLIENT1_BUFFER_TO_ARDUINO_LIB)==0){
+				char num_to_send[5];
+				int for_loop_count,x;
+				n=0;
+				param = 0;
+				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
+					if(xQueueHandleUart.param == 13){
+						param++;
+						switch (param){
+							case 1:
+								for_loop_count = atoi(num_to_send);
+								//print 10xxxxxx to serial (x=for_loop_count in 6 bit)
+								int *header;
+								int data = 64|for_loop_count;
+								header = &data;
+								uart0_puts((char*)header);
+								//print 01xxxxxx to serial (x=for_loop_count in 6 bit)
+								for(x = 0;x<for_loop_count;x++){   		
+									if(!ringBufS_empty(&data_from_conn1)){
+										os_printf("%c",ringBufS_get(&data_from_conn1));
+									}
+								}
+							n=0;	
+							break;
+						}
+					}else{
+						num_to_send[n++] = xQueueHandleUart.param;
+						num_to_send[n]=0;
+					}
+					vTaskDelay(10/ portTICK_RATE_MS);		
+				}
+			}
+			
 			/* <|READ DATA FROM CLIENT2|> */
 			if(strcmp(message_sr,READ_DATA_FROM_CLIENT2_BUFFER)==0){
 				char num_to_send[5];
@@ -476,6 +510,39 @@ void read_sr(void *pvParameters) {
 						switch (param){
 							case 1:
 								for_loop_count = atoi(num_to_send);
+								for(x = 0;x<for_loop_count;x++){ 
+									if(!ringBufS_empty(&data_from_conn2)){  		
+										os_printf("%c",ringBufS_get(&data_from_conn2));
+									}
+								}
+								n=0;					
+								break;
+						}
+					}else{
+						num_to_send[n++] = xQueueHandleUart.param;
+						num_to_send[n]=0;
+					}
+					vTaskDelay(10/ portTICK_RATE_MS);		
+				}
+			}
+			
+			/* <|READ DATA FROM CLIENT2|> */
+			if(strcmp(message_sr,READ_DATA_FROM_CLIENT2_BUFFER_TO_ARDUINO_LIB)==0){
+				char num_to_send[5];
+				int for_loop_count,x;
+				n=0;
+				param =0;
+				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
+					if(xQueueHandleUart.param == 13){
+						param++;
+						switch (param){
+							case 1:
+								for_loop_count = atoi(num_to_send);
+								//print 10xxxxxx to serial (x=for_loop_count in 6 bit)
+								int *header;
+								int data = 128|for_loop_count;
+								header = &data;
+								uart0_puts((char*)header);
 								for(x = 0;x<for_loop_count;x++){ 
 									if(!ringBufS_empty(&data_from_conn2)){  		
 										os_printf("%c",ringBufS_get(&data_from_conn2));
@@ -542,7 +609,11 @@ void read_sr(void *pvParameters) {
 							case 2:	strcpy(token,message_sr);break;
 							case 3: break;
 							case 4: break;
-							case 5: strcpy(tokensecret,message_sr);break;
+							case 5: 
+								os_printf("Token: %s\nToken Secret: %s\n",token,tokensecret);
+								microgear_setToken(&mg, token, tokensecret, NULL);
+								strcpy(tokensecret,message_sr);
+								break;
 						}
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
@@ -550,8 +621,7 @@ void read_sr(void *pvParameters) {
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
-				os_printf("Token: %s\nToken Secret: %s\n",token,tokensecret);
-				microgear_setToken(&mg, token, tokensecret, NULL);
+				
 			}
 
 			//~ /*	<|MICROGEAR INIT (SETUP APPID,KEY,SECRET,ALIAS)|> */
@@ -578,7 +648,11 @@ void read_sr(void *pvParameters) {
 							case 8: strcpy(secret,message_sr);break;
 							case 9: break;
 							case 10: break;
-							case 11: strcpy(alias,message_sr);break;
+							case 11:
+								os_printf("Appid: %s\nKey: %s\nSecret: %s\nAlias: %s\n",appid,key,secret,alias);	
+								microgear_init(&mg, key, secret, alias); 
+								strcpy(alias,message_sr);
+								break;
 						}
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
@@ -586,8 +660,6 @@ void read_sr(void *pvParameters) {
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
-				os_printf("Appid: %s\nKey: %s\nSecret: %s\nAlias: %s\n",appid,key,secret,alias);	
-				microgear_init(&mg, key, secret, alias);
 			}
 			
 			/*	<|MICROGEAR SET ALIAS|> */
@@ -632,7 +704,10 @@ void read_sr(void *pvParameters) {
 							case 2: strcpy(topic,message_sr);break;
 							case 3: break;
 							case 4: break;
-							case 5:	strcpy(data_pub,message_sr);break;
+							case 5:	
+								microgear_publish(&mg, topic, data_pub, NULL);
+								strcpy(data_pub,message_sr);
+								break;
 						}
 					}else{
 						message_sr[n++] = xQueueHandleUart.param;
@@ -640,7 +715,7 @@ void read_sr(void *pvParameters) {
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
-				microgear_publish(&mg, topic, data_pub, NULL);
+				
 			}
 			
 			/*	<|MICROGEAR SUBSCRIBE|> */
