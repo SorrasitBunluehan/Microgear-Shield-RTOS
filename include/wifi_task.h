@@ -54,8 +54,8 @@ vTaskDelete( NULL );
  
 /* <| Check status Wifi |> */
 void checkstatus() {
-	if( xSemaphoreTake( WifiReady, 0 ) == pdTRUE )
-	{
+	//~ if( xSemaphoreTake( WifiReady, 0 ) == pdTRUE )
+	//~ {
 		uint8_t status; 
 		status = wifi_station_get_connect_status();
 		if(status == STATION_GOT_IP){
@@ -64,7 +64,7 @@ void checkstatus() {
 		}else{
 			os_printf("DISCONNECTED\n");
 		}
-	}
+	//~ }
 }
  
 /* <| Need for handle function inside microgear.h |> */ 

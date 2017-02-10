@@ -273,35 +273,35 @@ void read_sr(void *pvParameters) {
 			}
 			
 			/*	<|CLIENT1 CONNECT TO SERVER|>	*/
-			if(strcmp(message_sr,CONNECT_TO_SERVER1_BY_CLIENT1) == 0){		
-				n=0;  				
-				char host[15]="";
-				int port;
-				message_sr[0] = '\0';
-				param=0;
-				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
-					if(xQueueHandleUart.param == 34 || xQueueHandleUart.param == 13 || xQueueHandleUart.param == 44 ){
-						param++;
-						n=0;
-						switch (param){
-							case 1:break;
-							case 2:strcpy(host,message_sr);break;
-							case 3:break;
-							case 4: 
-								port = atoi(message_sr);		
-								conn1.proto.tcp->remote_port = port;
-								if(espconn_gethostbyname(&conn1, host, &HostResolve_Ip1, ResolveDNS_for_conn1) == ESPCONN_OK){
-									memcpy(conn1.proto.tcp->remote_ip, &HostResolve_Ip1, 4);
-									espconn_connect(&conn1);
-								}
-							break;
+			if(strcmp(message_sr,CONNECT_TO_SERVER1_BY_CLIENT1) == 0){	
+					n=0;  				
+					char host[15]="";
+					int port;
+					message_sr[0] = '\0';
+					param=0;
+					while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
+						if(xQueueHandleUart.param == 34 || xQueueHandleUart.param == 13 || xQueueHandleUart.param == 44 ){
+							param++;
+							n=0;
+							switch (param){
+								case 1:break;
+								case 2:strcpy(host,message_sr);break;
+								case 3:break;
+								case 4: 
+									port = atoi(message_sr);		
+									conn1.proto.tcp->remote_port = port;
+									if(espconn_gethostbyname(&conn1, host, &HostResolve_Ip1, ResolveDNS_for_conn1) == ESPCONN_OK){
+										memcpy(conn1.proto.tcp->remote_ip, &HostResolve_Ip1, 4);
+										espconn_connect(&conn1);
+									}
+								break;
+							}
+						}else{
+							message_sr[n++] = xQueueHandleUart.param;
+							message_sr[n]=0;
 						}
-					}else{
-						message_sr[n++] = xQueueHandleUart.param;
-						message_sr[n]=0;
+						vTaskDelay(10/ portTICK_RATE_MS);		
 					}
-					vTaskDelay(10/ portTICK_RATE_MS);		
-				}
 			}
 			
 			/*	<|CLIENT2 CONNECT TO SERVER|>	*/
@@ -386,11 +386,10 @@ void read_sr(void *pvParameters) {
 						switch (param){
 							case 1:break;
 							case 2:
-								os_printf("Data: %s\n",data_to_send);
 								if(!(espconn_send(&conn1,data_to_send,n))){
-									os_printf("Send complete \n");				
+									os_printf("SUCCESS\n");				
 								}else{
-									os_printf("Can't send\n");
+									os_printf("UNSUCCESS\n");
 								}
 								free(data_to_send);
 								n=0;
@@ -418,11 +417,10 @@ void read_sr(void *pvParameters) {
 						switch (param){
 							case 1:break;
 							case 2:
-								os_printf("Data: %s\n",data_to_send);
 								if(!(espconn_send(&conn2,data_to_send,n))){
-									os_printf("Send complete \n");				
+									os_printf("SUCCESS\n");				
 								}else{
-									os_printf("Can't send\n");
+									os_printf("UNSUCCESS\n");
 								}
 								free(data_to_send);
 								n=0;
@@ -464,9 +462,10 @@ void read_sr(void *pvParameters) {
 				}
 			}
 			
+
 			/* <|READ DATA FROM CLIENT1 TO ARDUINO|> */
 			if(strcmp(message_sr,READ_DATA_FROM_CLIENT1_BUFFER_TO_ARDUINO_LIB)==0){
-				char num_to_send[5];
+				char num_to_send[5],header;
 				int for_loop_count,x;
 				n=0;
 				param = 0;
@@ -475,13 +474,8 @@ void read_sr(void *pvParameters) {
 						param++;
 						switch (param){
 							case 1:
+								os_printf("%c",64| *num_to_send);
 								for_loop_count = atoi(num_to_send);
-								//print 10xxxxxx to serial (x=for_loop_count in 6 bit)
-								int *header;
-								int data = 64|for_loop_count;
-								header = &data;
-								uart0_puts((char*)header);
-								//print 01xxxxxx to serial (x=for_loop_count in 6 bit)
 								for(x = 0;x<for_loop_count;x++){   		
 									if(!ringBufS_empty(&data_from_conn1)){
 										os_printf("%c",ringBufS_get(&data_from_conn1));
@@ -526,7 +520,7 @@ void read_sr(void *pvParameters) {
 				}
 			}
 			
-			/* <|READ DATA FROM CLIENT2|> */
+			/* <|READ DATA FROM CLIENT2 TO ARDUINO|> */
 			if(strcmp(message_sr,READ_DATA_FROM_CLIENT2_BUFFER_TO_ARDUINO_LIB)==0){
 				char num_to_send[5];
 				int for_loop_count,x;
@@ -537,12 +531,8 @@ void read_sr(void *pvParameters) {
 						param++;
 						switch (param){
 							case 1:
+								os_printf("%c",128| *num_to_send);
 								for_loop_count = atoi(num_to_send);
-								//print 10xxxxxx to serial (x=for_loop_count in 6 bit)
-								int *header;
-								int data = 128|for_loop_count;
-								header = &data;
-								uart0_puts((char*)header);
 								for(x = 0;x<for_loop_count;x++){ 
 									if(!ringBufS_empty(&data_from_conn2)){  		
 										os_printf("%c",ringBufS_get(&data_from_conn2));
@@ -610,9 +600,9 @@ void read_sr(void *pvParameters) {
 							case 3: break;
 							case 4: break;
 							case 5: 
+								strcpy(tokensecret,message_sr);
 								os_printf("Token: %s\nToken Secret: %s\n",token,tokensecret);
 								microgear_setToken(&mg, token, tokensecret, NULL);
-								strcpy(tokensecret,message_sr);
 								break;
 						}
 					}else{
@@ -649,9 +639,9 @@ void read_sr(void *pvParameters) {
 							case 9: break;
 							case 10: break;
 							case 11:
+								strcpy(alias,message_sr);
 								os_printf("Appid: %s\nKey: %s\nSecret: %s\nAlias: %s\n",appid,key,secret,alias);	
 								microgear_init(&mg, key, secret, alias); 
-								strcpy(alias,message_sr);
 								break;
 						}
 					}else{
@@ -705,8 +695,9 @@ void read_sr(void *pvParameters) {
 							case 3: break;
 							case 4: break;
 							case 5:	
-								microgear_publish(&mg, topic, data_pub, NULL);
 								strcpy(data_pub,message_sr);
+								os_printf("Topis is: %s \ndata is: %s\n",topic,message_sr);
+								microgear_publish(&mg, topic, data_pub, NULL);
 								break;
 						}
 					}else{
@@ -810,7 +801,7 @@ void ICACHE_FLASH_ATTR user_init(void) {
    
     /* Uart init */
     uart_param_t para;
-	para.uart_baud_rate = UART_BAUD_RATE_115200;
+	para.uart_baud_rate = UART_BAUD_RATE_9600;
 	para.uart_xfer_bit = UART_XFER_8_BIT;
 	para.uart_parity_mode = UART_PARITY_NONE;
 	para.uart_stop_bit = UART_1_STOP_BIT;
