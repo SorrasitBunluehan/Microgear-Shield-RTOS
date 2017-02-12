@@ -21,6 +21,11 @@ int ringBufS_empty (ringBufS *_this)
     return (0==_this->count);
 }
 
+int ringBufS_available (ringBufS *_this)
+{
+	return (_this->count);
+}
+
 int ringBufS_full (ringBufS *_this)
 {
     return (_this->count>=RBUF_SIZE);

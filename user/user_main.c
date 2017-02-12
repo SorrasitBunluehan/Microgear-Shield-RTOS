@@ -125,7 +125,7 @@
 
 /* <|DATA RECEIVED CALLBACK (FROM CONN1)|> */ 
 void recv_cb1(void *arg, char *pData, unsigned short len){
-	os_printf("Received data from conn1 size: %d\n",len);
+	//os_printf("Received data from conn1 size: %d\n",len);
 	int x;
 	for(x =0 ;x < len;x++){
 		ringBufS_put(&data_from_conn1,pData[x]);
@@ -135,7 +135,7 @@ void recv_cb1(void *arg, char *pData, unsigned short len){
 
 /* <|DATA RECEIVED CALLBACK (FROM CONN2)|> */ 
 void recv_cb2(void *arg, char *pData, unsigned short len){
-	os_printf("Received data from conn2 size: %d\n",len);
+	//os_printf("Received data from conn2 size: %d\n",len);
 	int x;
 	for(x =0 ;x < len;x++){
 		ringBufS_put(&data_from_conn2,pData[x]);
@@ -144,12 +144,12 @@ void recv_cb2(void *arg, char *pData, unsigned short len){
 
 /*	<|CLIENT1 CONNECTED CALLBACK|> */
 void connectCB1(void *arg) {
-	os_printf("CONNECTED\n",CONNECT_TO_SERVER1_BY_CLIENT1);
+	os_printf("CONNECTED\n");
 }
 
 /*	<|CLIENT2 CONNECTED CALLBACK|> */
 void connectCB2(void *arg) {
-	os_printf("CONNECTED\n",CONNECT_TO_SERVER2_BY_CLIENT2);
+	os_printf("CONNECTED\n");
 }
 
 /*	<|NETPIE CONNECTED CALLBACK|> */
@@ -474,15 +474,21 @@ void read_sr(void *pvParameters) {
 						param++;
 						switch (param){
 							case 1:
-								os_printf("%c",64| *num_to_send);
-								for_loop_count = atoi(num_to_send);
-								for(x = 0;x<for_loop_count;x++){   		
-									if(!ringBufS_empty(&data_from_conn1)){
-										os_printf("%c",ringBufS_get(&data_from_conn1));
+								if(!ringBufS_empty(&data_from_conn1)){
+									os_printf("Not empty\n");
+									for_loop_count = atoi(num_to_send);
+									int buffer_available = ringBufS_available(&data_from_conn1);
+									if(buffer_available < for_loop_count){
+										os_printf("%c",64| buffer_available);
+									}else if (buffer_available > for_loop_count){
+										os_printf("%c",64| for_loop_count);
 									}
+									for(x = 0;x<for_loop_count;x++){   											
+										os_printf("%c",ringBufS_get(&data_from_conn1));
+									}								
 								}
-							n=0;	
-							break;
+								n=0;	
+								break;
 						}
 					}else{
 						num_to_send[n++] = xQueueHandleUart.param;
@@ -531,12 +537,13 @@ void read_sr(void *pvParameters) {
 						param++;
 						switch (param){
 							case 1:
-								os_printf("%c",128| *num_to_send);
-								for_loop_count = atoi(num_to_send);
-								for(x = 0;x<for_loop_count;x++){ 
-									if(!ringBufS_empty(&data_from_conn2)){  		
+								if(!ringBufS_empty(&data_from_conn2)){ 
+									for_loop_count = atoi(num_to_send);
+									 	
+									os_printf("%c",128| for_loop_count);
+									for(x = 0;x<for_loop_count;x++){ 
 										os_printf("%c",ringBufS_get(&data_from_conn2));
-									}
+									}					
 								}
 								n=0;					
 								break;
