@@ -1,122 +1,5 @@
-//~ #include "uart.h"
-//~ #include "Microgear.h"
-//~ #include "ringbuf.h"
+
 #include "user_main.h"
-//~ #include "string.h"
-//~ #include "lwip/inet.h"
-
-
-// This code is alter old uart.c librar8y ->> xQueueUART = xQueueCreate(500, sizeof(uart_event_t)); from 32 to 500 size 
-
-
-//~ /* <|Global variable declaration|>
- //~ * 
- //~ * 	- WifiReady : semaphore handler use to indicate the ready state of wifi
- //~ * 	- SetWifi : semaphore handler use to set up ssid and password
- //~ * 	- xQueueHandleUart : Queue use to handle Uart packet
- //~ *  - data_from_conn(x) : Buffer for TCP stack 	
- //~ */
- 
-//~ extern xQueueHandle xQueueUART;
-
-//~ Microgear mg;
-//~ xSemaphoreHandle WifiReady;
-//~ xSemaphoreHandle SetWifi;
-//~ uart_event_t xQueueHandleUart;
-//~ ringBufS data_from_conn1,data_from_conn2;
-//~ char ssid[25],password[25],token[50],tokensecret[50],appid[50],key[50],secret[50],alias[50];
-//~ struct ip_info ipconfig;				//Use to get IP address of ESP8266
-
-//~ /* <|TCP variables declaration|>
- //~ *	
- //~ * 	- conn0 reserve for Microgear				
- //~ * 	- conn1 and conn2 for tcp communication	
- //~ * 
- //~ */ 
-//~ struct espconn conn0,conn1,conn2;
-//~ esp_tcp tcp0,tcp1,tcp2;
-//~ ip_addr_t HostResolve_Ip0,HostResolve_Ip1,HostResolve_Ip2;
-
-
-
-//~ /**********************************************************************************************************************
-//~ *											 WIFI PART																  *
-//~ ***********************************************************************************************************************/
-
-/* <| WiFi task |> */
-//~ LOCAL void ICACHE_FLASH_ATTR wifi_task(void *pvParameters){
-	//~ while(1){
-		//~ uint8_t status;
-		//~ if( xSemaphoreTake( SetWifi, 0 ) == pdTRUE )
-		//~ {
-			//~ struct station_config *config = (struct station_config *)zalloc(sizeof(struct station_config));
-			//~ sprintf(config->ssid, ssid);
-			//~ sprintf(config->password, password);
-			//~ wifi_station_set_config(config);
-			//~ free(config);
-			
-			
-			//~ os_printf("WiFi: Connecting to WiFi\n");
-			//~ wifi_station_connect();
-			
-			//~ status = wifi_station_get_connect_status();
-			//~ int8_t retries = 30;
-			//~ while ((wifi_station_get_connect_status() != STATION_GOT_IP) && (retries > 0)) {
-				//~ status = wifi_station_get_connect_status();
-				//~ if (status == STATION_WRONG_PASSWORD) {
-					//~ os_printf("WRONG PASSWORD\n");
-					//~ break;
-				//~ }
-				//~ else if (status == STATION_NO_AP_FOUND) {
-					//~ os_printf("AP NOT FOUND\n");
-					//~ break;
-				//~ }
-				//~ else if (status == STATION_CONNECT_FAIL) {
-					//~ os_printf("CONNECTION FAIL\n");
-					//~ break;
-				//~ }
-				//~ vTaskDelay(1000 / portTICK_RATE_MS);
-				//~ --retries;
-			//~ }
-			//~ if ((status = wifi_station_get_connect_status()) == STATION_GOT_IP) {
-				//~ wifi_get_ip_info(STATION_IF, &ipconfig);
-				//~ os_printf("CONNECTED %d.%d.%d.%d\n", IP2STR(&ipconfig.ip));
-				//~ vTaskDelay(1000 / portTICK_RATE_MS);
-			//~ }
-		//~ }
-		//~ vTaskDelay(1000 / portTICK_RATE_MS);
-		
-	//~ }
-//~ vTaskDelete( NULL );
-//~ }
- 
-//~ /* <| Check status Wifi |> */
-//~ void checkstatus() {
-	//~ if( xSemaphoreTake( WifiReady, 0 ) == pdTRUE )
-	//~ {
-		//~ uint8_t status; 
-		//~ status = wifi_station_get_connect_status();
-		//~ if(status == STATION_GOT_IP){
-			//~ wifi_get_ip_info(STATION_IF, &ipconfig);
-			//~ os_printf("CONNECTED %d.%d.%d.%d\n", IP2STR(&ipconfig.ip));
-		//~ }else{
-			//~ os_printf("DISCONNECTED\n");
-		//~ }
-	//~ }
-//~ }
- 
-//~ /* <| Need for handle function inside microgear.h |> */ 
-//~ void give_wifi_semaphore(void *pvParameters){
-	//~ while(1){
-		//~ while ( wifi_station_get_connect_status()== STATION_GOT_IP) {
-				//~ xSemaphoreGive(WifiReady);
-				//~ //os_printf("WiFi: Alive\n");
-				//~ vTaskDelay(1000 / portTICK_RATE_MS);
-		//~ }
-		//~ vTaskDelay(100 / portTICK_RATE_MS);
-	//~ }
-	//~ vTaskDelete( NULL );
-//~ }
 
 
 /**********************************************************************************************************************
@@ -125,21 +8,23 @@
 
 /* <|DATA RECEIVED CALLBACK (FROM CONN1)|> */ 
 void recv_cb1(void *arg, char *pData, unsigned short len){
-	//os_printf("Received data from conn1 size: %d\n",len);
+	//~ os_printf("Received data from conn1 size: %d\n",len);
 	int x;
 	for(x =0 ;x < len;x++){
 		ringBufS_put(&data_from_conn1,pData[x]);
 	}
+	//~ os_printf("buffer 1 count: %d",data_from_conn1.count);
 	
 }
 
 /* <|DATA RECEIVED CALLBACK (FROM CONN2)|> */ 
 void recv_cb2(void *arg, char *pData, unsigned short len){
-	//os_printf("Received data from conn2 size: %d\n",len);
+	//~ os_printf("Received data from conn2 size: %d\n",len);
 	int x;
 	for(x =0 ;x < len;x++){
 		ringBufS_put(&data_from_conn2,pData[x]);
 	}
+	//~ os_printf("buffer 2 count: %d",data_from_conn2.count);
 }
 
 /*	<|CLIENT1 CONNECTED CALLBACK|> */
@@ -462,7 +347,7 @@ void read_sr(void *pvParameters) {
 				}
 			}
 			
-
+//AT+CCS1 "192.168.9.17",6000
 			/* <|READ DATA FROM CLIENT1 TO ARDUINO|> */
 			if(strcmp(message_sr,READ_DATA_FROM_CLIENT1_BUFFER_TO_ARDUINO_LIB)==0){
 				char num_to_send[5],header;
@@ -475,16 +360,19 @@ void read_sr(void *pvParameters) {
 						switch (param){
 							case 1:
 								if(!ringBufS_empty(&data_from_conn1)){
-									os_printf("Not empty\n");
 									for_loop_count = atoi(num_to_send);
-									int buffer_available = ringBufS_available(&data_from_conn1);
-									if(buffer_available < for_loop_count){
-										os_printf("%c",64| buffer_available);
-									}else if (buffer_available > for_loop_count){
-										os_printf("%c",64| for_loop_count);
+									//~ int buffer_available = data_from_conn1.count;
+									if(data_from_conn1.count < for_loop_count){
+										//~ os_printf("Num to print: %d\n",data_from_conn1.count);
+										os_printf("%c",32| data_from_conn1.count);
+									}else if (data_from_conn1.count > for_loop_count){
+										//~ os_printf("Num to print: %d\n",for_loop_count);
+										os_printf("%c",32| for_loop_count);
 									}
-									for(x = 0;x<for_loop_count;x++){   											
-										os_printf("%c",ringBufS_get(&data_from_conn1));
+									for(x = 0;x<for_loop_count;x++){ 
+										if(!ringBufS_empty(&data_from_conn1)){
+											os_printf("%c",ringBufS_get(&data_from_conn1));
+										}
 									}								
 								}
 								n=0;	
@@ -537,15 +425,33 @@ void read_sr(void *pvParameters) {
 						param++;
 						switch (param){
 							case 1:
-								if(!ringBufS_empty(&data_from_conn2)){ 
-									for_loop_count = atoi(num_to_send);
+								//~ if(!ringBufS_empty(&data_from_conn2)){ 
+									//~ for_loop_count = atoi(num_to_send);
 									 	
-									os_printf("%c",128| for_loop_count);
+									//~ os_printf("%c",128| for_loop_count);
+									//~ for(x = 0;x<for_loop_count;x++){ 
+										//~ os_printf("%c",ringBufS_get(&data_from_conn2));
+									//~ }					
+								//~ }
+								//~ n=0;					
+								//~ break;
+								if(!ringBufS_empty(&data_from_conn2)){
+									for_loop_count = atoi(num_to_send);
+									//~ int buffer_available = data_from_conn1.count;
+									if(data_from_conn2.count < for_loop_count){
+										//~ os_printf("Num to print: %d\n",data_from_conn2.count);
+										os_printf("%c",64| data_from_conn2.count);
+									}else if (data_from_conn2.count > for_loop_count){
+										//~ os_printf("Num to print: %d\n",for_loop_count);
+										os_printf("%c",64| for_loop_count);
+									}
 									for(x = 0;x<for_loop_count;x++){ 
-										os_printf("%c",ringBufS_get(&data_from_conn2));
-									}					
+										if(!ringBufS_empty(&data_from_conn2)){
+											os_printf("%c",ringBufS_get(&data_from_conn2));
+										}
+									}								
 								}
-								n=0;					
+								n=0;	
 								break;
 						}
 					}else{
@@ -849,11 +755,7 @@ void ICACHE_FLASH_ATTR user_init(void) {
 	ringBufS_init(&data_from_conn1);
 	ringBufS_init(&data_from_conn2);
 	
-	//~ microgear_init(&mg, KEY, SECRET, ALIAS);
-	//~ microgear_setToken(&mg, TOKEN, TOKENSECRET, NULL);
-	//~ microgear_connect(&mg,APPID);
-	//~ microgear_on(&mg, CONNECTED, onConnected);
-	//~ microgear_on(&mg, MESSAGE, onMsghandler);
+
 	
 
  

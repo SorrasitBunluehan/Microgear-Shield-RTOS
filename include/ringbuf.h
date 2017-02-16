@@ -1,6 +1,6 @@
  #ifndef __RINGBUFS_H
     #define __RINGBUFS_H
-    #define RBUF_SIZE    500
+    #define RBUF_SIZE    5
 
     typedef struct  ringBufS
     {
