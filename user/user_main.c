@@ -1,81 +1,72 @@
 
 #include "user_main.h"
-
+	
 
 /**********************************************************************************************************************
 *											 CALLBACK FUNCTION PART  												  *
 ***********************************************************************************************************************/
 
-/* <|DATA RECEIVED CALLBACK (FROM CONN1)|> */ 
+
+/* <|DATA RECEIVED CALLBACK (FOR CLIENT 1)|> */ 
 void recv_cb1(void *arg, char *pData, unsigned short len){
-	//~ os_printf("Received data from conn1 size: %d\n",len);
-	int x;
-	for(x =0 ;x < len;x++){
-		ringBufS_put(&data_from_conn1,pData[x]);
-	}
-	//~ os_printf("buffer 1 count: %d",data_from_conn1.count);
-	
+	int i;
+	for(i=0;i<len;i++)client1_buf->add(client1_buf,(pData+i));
 }
 
-/* <|DATA RECEIVED CALLBACK (FROM CONN2)|> */ 
+
+/* <|makDATA RECEIVED CALLBACK (FRO CLIENT 2)|> */ 
 void recv_cb2(void *arg, char *pData, unsigned short len){
-	//~ os_printf("Received data from conn2 size: %d\n",len);
-	int x;
-	for(x =0 ;x < len;x++){
-		ringBufS_put(&data_from_conn2,pData[x]);
-	}
-	//~ os_printf("buffer 2 count: %d",data_from_conn2.count);
+	int i;
+	for(i=0;i<len;i++)client2_buf->add(client2_buf,(pData+i));
 }
 
 /*	<|CLIENT1 CONNECTED CALLBACK|> */
 void connectCB1(void *arg) {
-	os_printf("CONNECTED\n");
+	os_printf("OK\n");
 }
 
 /*	<|CLIENT2 CONNECTED CALLBACK|> */
 void connectCB2(void *arg) {
-	os_printf("CONNECTED\n");
+	os_printf("OK\n");
 }
 
 /*	<|NETPIE CONNECTED CALLBACK|> */
 void onConnected(char *attribute, uint8_t* msg, uint16_t msglen) {
-    os_printf("\nConnected with NECTPIE...\n"); 
-    //microgear_subscribe(&mg, "/#");   
+    os_printf("OK\n"); 
 }
 
 /*	<|NETPIE ON MESSAGE HANDLER CALLBACK|> */
 void onMsghandler(char *topic, uint8_t* msg, uint16_t msglen) {
-    uint16_t i;
-    os_printf("incoming message --> %s : ",topic);
-    for (i=0;i<msglen;i++) {
-        dmsg_putchar((char)(msg[i]));
-    }
-    os_printf("\n");    
+	memcpy(str.msg,msg,msglen);
+	strcpy(str.topic,topic);
+	str.msglen = msglen;
+	mg_buf->add(mg_buf,&str);
+    os_printf("incoming message --> %s : %s\n",str.topic,str.msg);
 }
 
 /* <|CLIENT1 ERROR CALLBACK|> */
 void errorCB1(void *arg, sint8 err) {
-	os_printf("We have an error: %d\n", err);
+	os_printf("Error: %d\n", err);
 }
 
 /* <|CLIENT2 ERROR CALLBACK|> */
 void errorCB2(void *arg, sint8 err) {
-	os_printf("We have an error: %d\n", err);
+	os_printf("Error: %d\n", err);
 }
 
 /*	<|CLIENT1 DISCONNECT CALLBACK|> */
 void disconnectCB1(void *arg) {
-	os_printf("Disconnected from the server(1)\n");
+	os_printf("CLIENT1 DISCONN \n");
 }
 
 /*	<|CLIENT1 DISCONNECT CALLBACK|> */
 void disconnectCB2(void *arg) {
-	os_printf("Disconnected from the server(2)\n");
+	os_printf("CLIENT2 DISCONN\n");
 }
 
 /* <|DNS callback for conn1 if there is no maping ip in cache|> */
 void ResolveDNS_for_conn1( const char *name, ip_addr_t *ipaddr, void *arg ){
-	os_printf("Can't find ip in cache system. Start to ask from DNS server\n");
+	os_printf("Can't find ip in cache system. Asking from DNS server\n");
 	memcpy(conn1.proto.tcp->remote_ip, ipaddr, 4);
 	os_printf("Connecting . . .\n");
 	espconn_connect(&conn1);
@@ -83,7 +74,7 @@ void ResolveDNS_for_conn1( const char *name, ip_addr_t *ipaddr, void *arg ){
 
 /* <|DNS callback for conn2 if there is no maping ip in cache|> */
 void ResolveDNS_for_conn2( const char *name, ip_addr_t *ipaddr, void *arg ){
-	os_printf("Can't find ip in cache system. Start to ask from DNS server\n");
+	os_printf("Can't find ip in cache system. Asking from DNS server\n");
 	memcpy(conn2.proto.tcp->remote_ip, ipaddr, 4);
 	os_printf("Connecting . . .\n");
 	espconn_connect(&conn2);
@@ -92,50 +83,50 @@ void ResolveDNS_for_conn2( const char *name, ip_addr_t *ipaddr, void *arg ){
 
 
 /**********************************************************************************************************************
-*											 SERIAL COMMUNICATION PART 												  *
+*											 SERIAL COMMUNICATION PART 												 																					 *
 ***********************************************************************************************************************/
 /*<|Read Serial|>
  * 
  * 	Description: Compare data from serial for several purpose.
- *  Member function: <1> Setup Wifi
+ *		@Available clients: 2 (Use client1 and client2)   
+ *		@Member functions: 
+ * 					 <1> Setup Wifi
  * 					 <2> Check Status Wifi
- * 					 <3> Connect to server (For conn1,conn2)
- * 					 <4> Stop connection (For conn1,conn2)
+ * 					 <3> Connect to server 
+ * 					 <4> Stop connection 
  * 					 <5> Check status of connection
- * 					 <6> Print data to TCP socket
- * 					 <7> Read data from TCP socket
- * 					 <8> Set Token and Token secret for Netpie connection
- * 					 <9> Init microgear (Set KEY,SECRET,ALIAS)
- * 					 <10> Connect to Netpie
- * 					 <11> Disconnect from Netpie
- * 					 <12> Publish data to the topic
- * 					 <13> Subscribe the Topic
- *  	  			 <14> Change Alias name
- *   	  			 <15> Chat to the alias 
+ * 					 <6> Print data to TCP socket 
+ * 					 <7> Read data from TCP socket and print to serial without header [Standalone mode]
+ * 					 <8> Read data from TCP socket and print to serial with header [Arduino mode]
+ * 					 <9> Set Token and Token secret for Netpie connection
+ * 					 <10> Init microgear (Set KEY,SECRET,ALIAS)
+ * 					 <11> Connect to Netpie
+ * 					 <12> Disconnect from Netpie
+ * 					 <13> Publish data to the topic
+ * 					 <14> Subscribe the Topic
+ *  	  			     <15> Change Alias name
+ *   	  			     <16> Chat to the alias 
  * 					 
  * 					 
  */ 
 void read_sr(void *pvParameters) {
-	char message_sr[50] = "";
-	int n;
-	int param=0;
 	while(1){
-		n=0;
+		message_index=0;
 		while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){
-			message_sr[n++] = xQueueHandleUart.param;
-			message_sr[n] = '\0';			
+			message_sr[message_index++] = xQueueHandleUart.param;
+			message_sr[message_index] = '\0';			
 			
 			/*	<|SETUP WIFI|> */
 			if(strcmp(message_sr,SETUPWIFI)== 0){ 
 				ssid[0] = '\0';
 				password[0] = '\0';
 				message_sr[0] = '\0';
-				n=0; 
+				message_index=0; 
 				param =0;				
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
 					if(xQueueHandleUart.param == 34 || xQueueHandleUart.param == 44){
 						param++;
-						n=0;
+						message_index=0;
 						switch (param){
 							case 1: break;
 							case 2: strcpy(ssid,message_sr);break;
@@ -144,8 +135,8 @@ void read_sr(void *pvParameters) {
 							case 5: strcpy(password,message_sr);break;
 						}
 					}else{
-						message_sr[n++] = xQueueHandleUart.param;
-						message_sr[n]=0;
+						message_sr[message_index++] = xQueueHandleUart.param;
+						message_sr[message_index]=0;
 					}
 					vTaskDelay( 10 / portTICK_RATE_MS);		
 				}
@@ -159,7 +150,7 @@ void read_sr(void *pvParameters) {
 			
 			/*	<|CLIENT1 CONNECT TO SERVER|>	*/
 			if(strcmp(message_sr,CONNECT_TO_SERVER1_BY_CLIENT1) == 0){	
-					n=0;  				
+					message_index=0;  				
 					char host[15]="";
 					int port;
 					message_sr[0] = '\0';
@@ -167,7 +158,7 @@ void read_sr(void *pvParameters) {
 					while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
 						if(xQueueHandleUart.param == 34 || xQueueHandleUart.param == 13 || xQueueHandleUart.param == 44 ){
 							param++;
-							n=0;
+							message_index=0;
 							switch (param){
 								case 1:break;
 								case 2:strcpy(host,message_sr);break;
@@ -182,8 +173,8 @@ void read_sr(void *pvParameters) {
 								break;
 							}
 						}else{
-							message_sr[n++] = xQueueHandleUart.param;
-							message_sr[n]=0;
+							message_sr[message_index++] = xQueueHandleUart.param;
+							message_sr[message_index]=0;
 						}
 						vTaskDelay(10/ portTICK_RATE_MS);		
 					}
@@ -191,7 +182,7 @@ void read_sr(void *pvParameters) {
 			
 			/*	<|CLIENT2 CONNECT TO SERVER|>	*/
 			if(strcmp(message_sr,CONNECT_TO_SERVER2_BY_CLIENT2) == 0){
-				n=0;  					
+				message_index=0;  					
 				char host[15]="";
 				int port;
 				message_sr[0] = '\0';
@@ -199,7 +190,7 @@ void read_sr(void *pvParameters) {
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
 					if(xQueueHandleUart.param == 34 || xQueueHandleUart.param == 13 || xQueueHandleUart.param == 44){
 						param++;
-						n=0;
+						message_index=0;
 						switch (param){
 							case 1: break;
 							case 2: strcpy(host,message_sr);break;
@@ -214,8 +205,8 @@ void read_sr(void *pvParameters) {
 							break;
 						}
 					}else{
-						message_sr[n++] = xQueueHandleUart.param;
-						message_sr[n]=0;
+						message_sr[message_index++] = xQueueHandleUart.param;
+						message_sr[message_index]=0;
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
@@ -258,12 +249,12 @@ void read_sr(void *pvParameters) {
 			}
 			
 			/*	<|CLIENT1 PRINT DATA TO SERVER|>
-			 * 	MAXIMUM DATA TO SEND: 500 BYTE
+			 * 	@maxsize data: 1024 bytes
 			 * 
 			 * 	*/
 			if(strcmp(message_sr,PRINT_TO_SERVER1)==0){
-				char *data_to_send = (char*) malloc (sizeof(char)* MAX_SIZE_TCP_PRINT);
-				n=0;
+				//~ char data_to_send[MAX_SIZE_TCP_PRINT];
+				message_index=0;
 				param =0;
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
 					if(xQueueHandleUart.param == 34){
@@ -271,30 +262,29 @@ void read_sr(void *pvParameters) {
 						switch (param){
 							case 1:break;
 							case 2:
-								if(!(espconn_send(&conn1,data_to_send,n))){
-									os_printf("SUCCESS\n");				
+								if(!(espconn_send(&conn1,send_buf1,message_index))){
+									os_printf("OK\n");				
 								}else{
-									os_printf("UNSUCCESS\n");
+									os_printf("ERROR\n");
 								}
-								free(data_to_send);
-								n=0;
+								message_index=0;
 								break;
 						}
 					}else{
-						data_to_send[n++] = xQueueHandleUart.param;
-						data_to_send[n]=0;
+						send_buf1[message_index++] = xQueueHandleUart.param;
+						send_buf1[message_index]=0;
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
 			}
 			
 			/*	<|CLIENT2 PRINT DATA TO SERVER|>	
-			 * 	MAXIMUM DATA TO SEND: 500 BYTE
+			 * @maxsize data: 1024 bytes
 			 * 	
 			 * */
 			if(strcmp(message_sr,PRINT_TO_SERVER2)==0){
-				char *data_to_send = (char*) malloc (sizeof(char)* MAX_SIZE_TCP_PRINT);
-				n=0;
+				//~ char *data_to_send = (char*) malloc (sizeof(char)* MAX_SIZE_TCP_PRINT);
+				message_index=0;
 				param =0;
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
 					if(xQueueHandleUart.param == 34){
@@ -302,170 +292,188 @@ void read_sr(void *pvParameters) {
 						switch (param){
 							case 1:break;
 							case 2:
-								if(!(espconn_send(&conn2,data_to_send,n))){
-									os_printf("SUCCESS\n");				
+								if(!(espconn_send(&conn2,send_buf2,message_index))){
+									os_printf("OK\n");				
 								}else{
-									os_printf("UNSUCCESS\n");
+									os_printf("ERROR\n");
 								}
-								free(data_to_send);
-								n=0;
+								//~ free(send_buf2);
+								message_index=0;
 								break;
 						}
 					}else{
-						data_to_send[n++] = xQueueHandleUart.param;
-						data_to_send[n]=0;
+						send_buf2[message_index++] = xQueueHandleUart.param;
+						send_buf2[message_index]=0;
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
 			}
 			
-			/* <|READ DATA FROM CLIENT1|> */
+			/*	<|READ DATA FROM CLIENT1 BUFFER|> 
+			 *	@Print data from client1 buffer to serial without header  		
+			 * 
+			 */
 			if(strcmp(message_sr,READ_DATA_FROM_CLIENT1_BUFFER)==0){
-				char num_to_send[5];
-				int for_loop_count,x;
-				n=0;
+				char c;
+				int sending_bytes,x;
+				message_index=0;
 				param = 0;
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
 					if(xQueueHandleUart.param == 13){
 						param++;
 						switch (param){
 							case 1:
-								for_loop_count = atoi(num_to_send);
-								for(x = 0;x<for_loop_count;x++){   		
-									if(!ringBufS_empty(&data_from_conn1)){
-										os_printf("%c",ringBufS_get(&data_from_conn1));
-									}
-								}
-							n=0;	
+								sending_bytes = atoi(message_sr);
+								int buffer_ele = client1_buf->numElements(client1_buf);
+								if(buffer_ele != 0){
+										if(buffer_ele > sending_bytes){
+													for(x = 0;x<sending_bytes;x++){   					
+															client1_buf->pull(client1_buf,&c);
+															os_printf("%c",c);
+													}
+										}else {
+													for(x = 0;x<buffer_ele;x++){   					
+															client1_buf->pull(client1_buf,&c);
+															os_printf("%c",c);
+													}
+										}
+								}	
+							message_index=0;	
 							break;
 						}
 					}else{
-						num_to_send[n++] = xQueueHandleUart.param;
-						num_to_send[n]=0;
+						message_sr[message_index++] = xQueueHandleUart.param;
+						message_sr[message_index]=0;
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
 			}
 			
-//AT+CCS1 "192.168.9.17",6000
-			/* <|READ DATA FROM CLIENT1 TO ARDUINO|> */
+			/*	<|READ DATA FROM CLIENT1 BUFFER TO ARDUINO|> 
+			 *	@Print data from client1 buffer to serial with header  		
+			 * 
+			 */
 			if(strcmp(message_sr,READ_DATA_FROM_CLIENT1_BUFFER_TO_ARDUINO_LIB)==0){
-				char num_to_send[5],header;
-				int for_loop_count,x;
-				n=0;
+				char header,c;
+				int sending_bytes,x;
+				message_index=0;
 				param = 0;
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
 					if(xQueueHandleUart.param == 13){
 						param++;
 						switch (param){
 							case 1:
-								if(!ringBufS_empty(&data_from_conn1)){
-									for_loop_count = atoi(num_to_send);
-									//~ int buffer_available = data_from_conn1.count;
-									if(data_from_conn1.count < for_loop_count){
-										//~ os_printf("Num to print: %d\n",data_from_conn1.count);
-										os_printf("%c",32| data_from_conn1.count);
-									}else if (data_from_conn1.count > for_loop_count){
-										//~ os_printf("Num to print: %d\n",for_loop_count);
-										os_printf("%c",32| for_loop_count);
-									}
-									for(x = 0;x<for_loop_count;x++){ 
-										if(!ringBufS_empty(&data_from_conn1)){
-											os_printf("%c",ringBufS_get(&data_from_conn1));
+							sending_bytes = atoi(message_sr);
+								int buffer_ele = client1_buf->numElements(client1_buf);
+								if(buffer_ele != 0){
+										if(buffer_ele > sending_bytes){
+													 os_printf("%c",32| sending_bytes);
+													for(x = 0;x<sending_bytes;x++){   					
+															client1_buf->pull(client1_buf,&c);
+															os_printf("%c",c);
+													}
+										}else {
+													os_printf("%c",32| buffer_ele);				
+													for(x = 0;x<buffer_ele;x++){   																
+															client1_buf->pull(client1_buf,&c);
+															os_printf("%c",c);
+													}
 										}
-									}								
-								}
-								n=0;	
-								break;
+								}	
+							message_index=0;						
+							break;
 						}
 					}else{
-						num_to_send[n++] = xQueueHandleUart.param;
-						num_to_send[n]=0;
+						message_sr[message_index++] = xQueueHandleUart.param;
+						message_sr[message_index]=0;
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
 			}
 			
-			/* <|READ DATA FROM CLIENT2|> */
+			/*	<|READ DATA FROM CLIENT2 BUFFER|> 
+			 *	@Print data from client2 buffer to serial without header  		
+			 * 
+			 */
 			if(strcmp(message_sr,READ_DATA_FROM_CLIENT2_BUFFER)==0){
-				char num_to_send[5];
-				int for_loop_count,x;
-				n=0;
+				char c;
+				int sending_bytes,x;
+				message_index=0;
 				param =0;
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
 					if(xQueueHandleUart.param == 13){
 						param++;
 						switch (param){
 							case 1:
-								for_loop_count = atoi(num_to_send);
-								for(x = 0;x<for_loop_count;x++){ 
-									if(!ringBufS_empty(&data_from_conn2)){  		
-										os_printf("%c",ringBufS_get(&data_from_conn2));
+								sending_bytes = atoi(message_sr);
+									int buffer_ele = client2_buf->numElements(client2_buf);
+									if(buffer_ele != 0){
+											if(buffer_ele > sending_bytes){
+														for(x = 0;x<sending_bytes;x++){   					
+																client2_buf->pull(client2_buf,&c);
+																os_printf("%c",c);
+														}
+											}else {
+														for(x = 0;x<buffer_ele;x++){   					
+																client2_buf->pull(client2_buf,&c);
+																os_printf("%c",c);
+														}
+											}
 									}
-								}
-								n=0;					
+								message_index=0;					
 								break;
 						}
 					}else{
-						num_to_send[n++] = xQueueHandleUart.param;
-						num_to_send[n]=0;
+						message_sr[message_index++] = xQueueHandleUart.param;
+						message_sr[message_index]=0;
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
 			}
 			
-			/* <|READ DATA FROM CLIENT2 TO ARDUINO|> */
+			/*	<|READ DATA FROM CLIENT2 BUFFER TO ARDUINO|>
+			 * @Print data from client2 buffer to serial with header  		
+			 * 
+			 */
 			if(strcmp(message_sr,READ_DATA_FROM_CLIENT2_BUFFER_TO_ARDUINO_LIB)==0){
-				char num_to_send[5];
-				int for_loop_count,x;
-				n=0;
+				char c;
+				int sending_bytes,x;
+				message_index=0;
 				param =0;
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
 					if(xQueueHandleUart.param == 13){
 						param++;
 						switch (param){
 							case 1:
-								//~ if(!ringBufS_empty(&data_from_conn2)){ 
-									//~ for_loop_count = atoi(num_to_send);
-									 	
-									//~ os_printf("%c",128| for_loop_count);
-									//~ for(x = 0;x<for_loop_count;x++){ 
-										//~ os_printf("%c",ringBufS_get(&data_from_conn2));
-									//~ }					
-								//~ }
-								//~ n=0;					
-								//~ break;
-								if(!ringBufS_empty(&data_from_conn2)){
-									for_loop_count = atoi(num_to_send);
-									//~ int buffer_available = data_from_conn1.count;
-									if(data_from_conn2.count < for_loop_count){
-										//~ os_printf("Num to print: %d\n",data_from_conn2.count);
-										os_printf("%c",64| data_from_conn2.count);
-									}else if (data_from_conn2.count > for_loop_count){
-										//~ os_printf("Num to print: %d\n",for_loop_count);
-										os_printf("%c",64| for_loop_count);
-									}
-									for(x = 0;x<for_loop_count;x++){ 
-										if(!ringBufS_empty(&data_from_conn2)){
-											os_printf("%c",ringBufS_get(&data_from_conn2));
+							sending_bytes = atoi(message_sr);
+								int buffer_ele = client2_buf->numElements(client2_buf);
+								if(buffer_ele != 0){
+										if(buffer_ele > sending_bytes){
+													 os_printf("%c",64| sending_bytes);
+													for(x = 0;x<sending_bytes;x++){   					
+															client2_buf->pull(client2_buf,&c);
+															os_printf("%c",c);
+													}
+										}else {
+													os_printf("%c",64| buffer_ele);				
+													for(x = 0;x<buffer_ele;x++){   																
+															client2_buf->pull(client2_buf,&c);
+															os_printf("%c",c);
+													}
 										}
-									}								
-								}
-								n=0;	
+								}							
 								break;
 						}
 					}else{
-						num_to_send[n++] = xQueueHandleUart.param;
-						num_to_send[n]=0;
+						message_sr[message_index++] = xQueueHandleUart.param;
+						message_sr[message_index]=0;
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
 			}
 				
 			/* <|CLIENT SECURE CONNECTION CONNECT|> */
-			if(strcmp(message_sr,SECURE_CONNECT)==0){
-				
-				
+			if(strcmp(message_sr,SECURE_CONNECT)==0){		
 			}
 			
 			/* <|CLIENT SECURE CONNECTION CONNECTED|> */
@@ -498,7 +506,7 @@ void read_sr(void *pvParameters) {
 				
 			 /*	<|MICROGEAR SETUP TOKEN|> */
 			if(strcmp(message_sr,SETUP_TOKEN)==0){
-				n=0;
+				message_index=0;
 				tokensecret[0] = '\0';
 				token[0] = '\0';
 				param=0;
@@ -506,7 +514,7 @@ void read_sr(void *pvParameters) {
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
 					if(xQueueHandleUart.param == 34 || xQueueHandleUart.param == 44){
 						param++;
-						n=0;
+						message_index=0;
 						switch (param){
 							case 1: break;
 							case 2:	strcpy(token,message_sr);break;
@@ -519,8 +527,8 @@ void read_sr(void *pvParameters) {
 								break;
 						}
 					}else{
-						message_sr[n++] = xQueueHandleUart.param;
-						message_sr[n]=0;
+						message_sr[message_index++] = xQueueHandleUart.param;
+						message_sr[message_index]=0;
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
@@ -529,7 +537,7 @@ void read_sr(void *pvParameters) {
 
 			//~ /*	<|MICROGEAR INIT (SETUP APPID,KEY,SECRET,ALIAS)|> */
 			if(strcmp(message_sr,INIT_MICROGEAR)==0){
-				n=0;
+				message_index=0;
 				param=0;
 				appid[0] = '\0';
 				key[0] = '\0';
@@ -539,7 +547,7 @@ void read_sr(void *pvParameters) {
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){
 					if(xQueueHandleUart.param == 34 || xQueueHandleUart.param == 44 ){
 						param++;
-						n=0;
+						message_index=0;
 						switch (param){
 							case 1: break;
 							case 2: strcpy(appid,message_sr);break;
@@ -558,8 +566,8 @@ void read_sr(void *pvParameters) {
 								break;
 						}
 					}else{
-						message_sr[n++] = xQueueHandleUart.param;
-						message_sr[n]=0;
+						message_sr[message_index++] = xQueueHandleUart.param;
+						message_sr[message_index]=0;
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
@@ -567,13 +575,13 @@ void read_sr(void *pvParameters) {
 			
 			/*	<|MICROGEAR SET ALIAS|> */
 			if(strcmp(message_sr,SET_ALIAS_NAME)==0){
-				n=0;
+				message_index=0;
 				message_sr[0] = '\0';
 				param = 0;
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
 					if(xQueueHandleUart.param == 34){ 
 						param++;  												
-						n=0;
+						message_index=0;
 						switch (param){
 							case 1: break;
 							case 2:	
@@ -582,8 +590,8 @@ void read_sr(void *pvParameters) {
 								break;
 						}										
 					}else{
-						message_sr[n++] = xQueueHandleUart.param;
-						message_sr[n]=0;
+						message_sr[message_index++] = xQueueHandleUart.param;
+						message_sr[message_index]=0;
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
@@ -592,7 +600,7 @@ void read_sr(void *pvParameters) {
 			/*	<|MICROGEAR PUBLISH|> */
 			//should not use white space in data_pub
 			if(strcmp(message_sr,PUBLISH)==0){
-				n=0;
+				message_index=0;
 				int param =0;
 				char topic[MAX_SIZE_TOPIC],data_pub[MAX_SIZE_PUBLISH];
 				message_sr[0] = '\0'; 
@@ -601,7 +609,7 @@ void read_sr(void *pvParameters) {
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){
 					if(xQueueHandleUart.param == 44 || xQueueHandleUart.param == 34 ){
 						param++;
-						n=0;
+						message_index=0;
 						switch (param){
 							case 1: break;
 							case 2: strcpy(topic,message_sr);break;
@@ -614,8 +622,8 @@ void read_sr(void *pvParameters) {
 								break;
 						}
 					}else{
-						message_sr[n++] = xQueueHandleUart.param;
-						message_sr[n]=0;
+						message_sr[message_index++] = xQueueHandleUart.param;
+						message_sr[message_index]=0;
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
@@ -624,13 +632,13 @@ void read_sr(void *pvParameters) {
 			
 			/*	<|MICROGEAR SUBSCRIBE|> */
 			if(strcmp(message_sr,SUBSCRIBE)==0){
-				n=0;
+				message_index=0;
 				message_sr[0] = '\0';
 				param=0;
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
 					if(xQueueHandleUart.param == 34){
 						param++;
-						n=0;
+						message_index=0;
 						switch (param){
 							case 1: break;
 							case 2: 
@@ -639,8 +647,8 @@ void read_sr(void *pvParameters) {
 								break;
 						}												
 					}else{
-						message_sr[n++] = xQueueHandleUart.param;
-						message_sr[n]=0;
+						message_sr[message_index++] = xQueueHandleUart.param;
+						message_sr[message_index]=0;
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
@@ -648,11 +656,11 @@ void read_sr(void *pvParameters) {
 			
 			/*	<|MICROGEAR UNSUBSCRIBE|> */
 			if(strcmp(message_sr,UNSUBSCRIBE)==0){
-				n=0;
+				message_index=0;
 				message_sr[0] = '\0';
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
 					if(xQueueHandleUart.param == 34){
-						n=0;
+						message_index=0;
 						param++;
 						switch(param) {
 							case 1: break;
@@ -662,8 +670,8 @@ void read_sr(void *pvParameters) {
 								break;
 						}										
 					}else{
-						message_sr[n++] = xQueueHandleUart.param;
-						message_sr[n]=0;
+						message_sr[message_index++] = xQueueHandleUart.param;
+						message_sr[message_index]=0;
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
@@ -671,7 +679,7 @@ void read_sr(void *pvParameters) {
 			
 			/*	<|MICROGEAR CHAT|> */
 			if(strcmp(message_sr,CHAT)==0){
-				n=0;
+				message_index=0;
 				char alias[50],payload[MAX_SIZE_PUBLISH];
 				message_sr[0] = '\0';
 				payload[0] = '\0';
@@ -680,7 +688,7 @@ void read_sr(void *pvParameters) {
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){
 					if(xQueueHandleUart.param == 34 || xQueueHandleUart.param == 44){
 						param++;
-						n=0;
+						message_index=0;
 						switch (param){
 							case 1: break;
 							case 2: strcpy(alias,message_sr);break;
@@ -689,14 +697,13 @@ void read_sr(void *pvParameters) {
 							case 5: strcpy(payload,message_sr);break;
 						}
 					}else{
-						message_sr[n++] = xQueueHandleUart.param;
-						message_sr[n]=0;
+						message_sr[message_index++] = xQueueHandleUart.param;
+						message_sr[message_index]=0;
 					}
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
 				microgear_chat(&mg, alias, payload);
-			}
-			
+			}			
 			vTaskDelay(10 / portTICK_RATE_MS);
 		}
 		vTaskDelay(1000 / portTICK_RATE_MS);
@@ -708,11 +715,11 @@ void read_sr(void *pvParameters) {
 
 
 /**********************************************************************************************************************
-*											 USER INIT PART           												  *
+*											 USER INIT PART           																																					  *
 ***********************************************************************************************************************/
 void ICACHE_FLASH_ATTR user_init(void) {
    
-    /* Uart init */
+    //////////* Uart init *//////////
     uart_param_t para;
 	para.uart_baud_rate = UART_BAUD_RATE_9600;
 	para.uart_xfer_bit = UART_XFER_8_BIT;
@@ -721,14 +728,16 @@ void ICACHE_FLASH_ATTR user_init(void) {
 	para.uart_flow_ctrl = UART_NONE_FLOW_CTRL;
 	uart0_init(&para);
 	
-	/* Semaphore init */
+	
+	//////////* Semaphore init *//////////
 	vSemaphoreCreateBinary(WifiReady);
 	xSemaphoreTake(WifiReady, 0);              // take the default semaphore
 	vSemaphoreCreateBinary(SetWifi);
 	xSemaphoreTake(SetWifi, 0);
 	microgear_setWifiSemaphore(&WifiReady);
 	
-	/* tcp1 init */
+	
+	//////////* tcp1 init *//////////
 	espconn_init();								//HAVE TO BE CALL UNLESS THE CONN WILL FAIL
 	conn1.type = ESPCONN_TCP;
 	conn1.state = ESPCONN_NONE;
@@ -739,30 +748,39 @@ void ICACHE_FLASH_ATTR user_init(void) {
 	conn2.proto.tcp = &tcp2;
 	conn2.proto.tcp->local_port=espconn_port();
 	
-	//Register callback function for espconn1
+	
+	/////////* Register callback function for espconn1 */////////
 	espconn_regist_connectcb(&conn1,connectCB1);
 	espconn_regist_reconcb(&conn1, errorCB1);
 	espconn_regist_disconcb(&conn1,disconnectCB1);
 	espconn_regist_recvcb(&conn1,recv_cb1);
 	
-	//Register callback function for espconn2
+	
+	/////////* Register callback function for espconn2 */////////
 	espconn_regist_connectcb(&conn2,connectCB2);
 	espconn_regist_reconcb(&conn2, errorCB2);
 	espconn_regist_disconcb(&conn2,disconnectCB2);
 	espconn_regist_recvcb(&conn2,recv_cb2);
 	
-	//Ringbuf init
-	ringBufS_init(&data_from_conn1);
-	ringBufS_init(&data_from_conn2);
 	
+	microgear_init(&mg, "YhtHPvlmMxL5yJB", "YphWgyUI31q8sEMu6qtNrIPn1", "Light_control"); 
+	microgear_setToken(&mg, "RKJy30tYkUKoXa7G", "oWfxRNqRaXdwffVdFvuU27qJqr1KNpIy", NULL);
+	microgear_connect(&mg,"HelloNetpie1");
+	microgear_on(&mg, CONNECTED, onConnected);
+	microgear_on(&mg, MESSAGE, onMsghandler);
 
 	
-
- 
-	/* Task init */
+	
+	//////////* Task init *//////////////
 	xTaskCreate(wifi_task, "wifi_task", 254,NULL,tskIDLE_PRIORITY + 1, NULL);
 	xTaskCreate(give_wifi_semaphore, "give_wifiready_semaphore", 254,NULL,tskIDLE_PRIORITY + 1, NULL);
 	xTaskCreate(read_sr, "read_sr", 254,NULL,tskIDLE_PRIORITY + 1, NULL);
+	
+	
+	//////////* Ring buf init *//////////
+	client1_buf = (RingBuf *)RingBuf_new(1, 1024);
+	client2_buf = (RingBuf *)RingBuf_new(1, 1024);
+	mg_buf = RingBuf_new(sizeof(struct MgStruct ), 20);
 	
    
 }
