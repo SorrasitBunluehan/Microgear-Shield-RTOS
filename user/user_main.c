@@ -37,6 +37,7 @@ void onConnected(char *attribute, uint8_t* msg, uint16_t msglen) {
 
 /*	<|NETPIE ON MESSAGE HANDLER CALLBACK|> */
 void onMsghandler(char *topic, uint8_t* msg, uint16_t msglen) {
+	memset(&str,0,sizeof(struct MgStruct));
 	memcpy(str.msg,msg,msglen);
 	strcpy(str.topic,topic);
 	str.msglen = msglen;
@@ -225,26 +226,26 @@ void read_sr(void *pvParameters) {
 			/*	<|CHECK STATUS OF CLIENT 1|>	*/
 			if(strcmp(message_sr,CHECKSTATUS_CLIENT1) == 0){
 				switch(conn1.state){
-					case ESPCONN_CONNECT: os_printf("CONNECTED"); break;
-					case ESPCONN_NONE: os_printf("NONE"); break;
-					case ESPCONN_LISTEN: os_printf("LISTENING"); break;
-					case ESPCONN_WAIT: os_printf("WAITING"); break;
-					case ESPCONN_WRITE: os_printf("WRITING"); break;
-					case ESPCONN_READ: os_printf("READING"); break;
-					case ESPCONN_CLOSE: os_printf("NOT CONNECTED"); break;
+					case ESPCONN_CONNECT: os_printf("%s OK\n", CHECKSTATUS_CLIENT1); break;
+					case ESPCONN_NONE: os_printf("NONE\n"); break;
+					case ESPCONN_LISTEN: os_printf("LISTENING\n"); break;
+					case ESPCONN_WAIT: os_printf("WAITING\n"); break;
+					case ESPCONN_WRITE: os_printf("WRITING\n"); break;
+					case ESPCONN_READ: os_printf("READING\n"); break;
+					case ESPCONN_CLOSE: os_printf("NOT CONNECTED\n"); break;
 				}
 			}
 			
 			/*	<|CHECK STATUS OF CLIENT 2|>	*/
 			if(strcmp(message_sr,CHECKSTATUS_CLIENT2) == 0){
 				switch(conn2.state){
-					case ESPCONN_CONNECT: os_printf("CONNECTED"); break;
-					case ESPCONN_NONE: os_printf("NONE"); break;
-					case ESPCONN_LISTEN: os_printf("LISTENING"); break;
-					case ESPCONN_WAIT: os_printf("WAITING"); break;
-					case ESPCONN_WRITE: os_printf("WRITING"); break;
-					case ESPCONN_READ: os_printf("READING"); break;
-					case ESPCONN_CLOSE: os_printf("CLOSED"); break;
+					case ESPCONN_CONNECT: os_printf("%s OK\n",CHECKSTATUS_CLIENT2); break;
+					case ESPCONN_NONE: os_printf("NONE\n"); break;
+					case ESPCONN_LISTEN: os_printf("LISTENING\n"); break;
+					case ESPCONN_WAIT: os_printf("WAITING\n"); break;
+					case ESPCONN_WRITE: os_printf("WRITING\n"); break;
+					case ESPCONN_READ: os_printf("READING\n"); break;
+					case ESPCONN_CLOSE: os_printf("CLOSED\n"); break;
 				}
 			}
 			
@@ -601,7 +602,7 @@ void read_sr(void *pvParameters) {
 			//should not use white space in data_pub
 			if(strcmp(message_sr,PUBLISH)==0){
 				message_index=0;
-				int param =0;
+				param =0;
 				char topic[MAX_SIZE_TOPIC],data_pub[MAX_SIZE_PUBLISH];
 				message_sr[0] = '\0'; 
 				topic[0] = '\0';
@@ -658,6 +659,7 @@ void read_sr(void *pvParameters) {
 			if(strcmp(message_sr,UNSUBSCRIBE)==0){
 				message_index=0;
 				message_sr[0] = '\0';
+				param =0;
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){	
 					if(xQueueHandleUart.param == 34){
 						message_index=0;
@@ -684,7 +686,7 @@ void read_sr(void *pvParameters) {
 				message_sr[0] = '\0';
 				payload[0] = '\0';
 				alias[0] = '\0';
-				int param =0;
+				param =0;
 				while(xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS){
 					if(xQueueHandleUart.param == 34 || xQueueHandleUart.param == 44){
 						param++;
@@ -763,11 +765,13 @@ void ICACHE_FLASH_ATTR user_init(void) {
 	espconn_regist_recvcb(&conn2,recv_cb2);
 	
 	
-	microgear_init(&mg, "YhtHPvlmMxL5yJB", "YphWgyUI31q8sEMu6qtNrIPn1", "Light_control"); 
-	microgear_setToken(&mg, "RKJy30tYkUKoXa7G", "oWfxRNqRaXdwffVdFvuU27qJqr1KNpIy", NULL);
-	microgear_connect(&mg,"HelloNetpie1");
-	microgear_on(&mg, CONNECTED, onConnected);
-	microgear_on(&mg, MESSAGE, onMsghandler);
+	
+	/* <| FOR DEBUGGING PURPOSE ONLY  |> */
+	//~ microgear_init(&mg, "YhtHPvlmMxL5yJB", "YphWgyUI31q8sEMu6qtNrIPn1", "Light_control"); 
+	//~ microgear_setToken(&mg, "RKJy30tYkUKoXa7G", "oWfxRNqRaXdwffVdFvuU27qJqr1KNpIy", NULL);
+	//~ microgear_connect(&mg,"HelloNetpie1");
+	//~ microgear_on(&mg, CONNECTED, onConnected);
+	//~ microgear_on(&mg, MESSAGE, onMsghandler);
 
 	
 	
