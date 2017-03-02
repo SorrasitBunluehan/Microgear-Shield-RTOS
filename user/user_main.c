@@ -14,7 +14,7 @@ void recv_cb1(void *arg, char *pData, unsigned short len){
 }
 
 
-/* <|makDATA RECEIVED CALLBACK (FRO CLIENT 2)|> */ 
+/* <|DATA RECEIVED CALLBACK (FRO CLIENT 2)|> */ 
 void recv_cb2(void *arg, char *pData, unsigned short len){
 	int i;
 	for(i=0;i<len;i++)client2_buf->add(client2_buf,(pData+i));
@@ -42,7 +42,7 @@ void onMsghandler(char *topic, uint8_t* msg, uint16_t msglen) {
 	strcpy(str.topic,topic);
 	str.msglen = msglen;
 	mg_buf->add(mg_buf,&str);
-    os_printf("incoming message --> %s : %s\n",str.topic,str.msg);
+    //os_printf("incoming message --> %s : %s\n",str.topic,str.msg);
 }
 
 /* <|CLIENT1 ERROR CALLBACK|> */
@@ -705,7 +705,18 @@ void read_sr(void *pvParameters) {
 					vTaskDelay(10/ portTICK_RATE_MS);		
 				}
 				microgear_chat(&mg, alias, payload);
-			}			
+			}	
+			
+			/* 	<| PULL MESSAGE TO SERIAL FROM MICROGEAR BUFFER |>	*/
+			if(strcmp(message_sr,PULL_MESSAGE)==0){				
+				int buffer_ele = mg_buf->numElements(mg_buf);
+				if(buffer_ele != 0){
+					mg_buf->pull(mg_buf,&str_pull);
+					os_printf("Topic is: %s\n",str_pull.topic);
+					os_printf("Msg is: %s\n",str_pull.msg);
+					os_printf("Size is: %d\n",str_pull.msglen);					
+				}							
+			}																			
 			vTaskDelay(10 / portTICK_RATE_MS);
 		}
 		vTaskDelay(1000 / portTICK_RATE_MS);

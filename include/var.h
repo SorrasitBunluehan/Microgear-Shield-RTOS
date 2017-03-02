@@ -26,9 +26,10 @@ extern xQueueHandle xQueueUART;
 
 /* <|MQTT Variables declaration|>
  *		@str -> MgStruct structure type keep all information of arrival message (topic,msg,msglen)
+ * 	@str_pull -> MgStruct structure type store data that pull from microgear buffer
  *  	@token,tokensecret,appid,key,secret,alias -> Required info. to connect to NETPIE
  */ 
-struct MgStruct str;	
+struct MgStruct str,str_pull;	
 char token[50],tokensecret[50],appid[50],key[50],secret[50],alias[50];
 struct ip_info ipconfig;				//Use to get IP address of ESP8266
 

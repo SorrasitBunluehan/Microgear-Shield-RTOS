@@ -44,6 +44,7 @@
 #define SUBSCRIBE "AT+MGS "																							//AT+MGS "<TOPIC>"  
 #define UNSUBSCRIBE "AT+MGUS "																					//AT+MGUS "<TOPIC>"
 #define CHAT "AT+MGC "																										//AT+MGC "<ALIAS>","<PAYLOAD>"
+#define PULL_MESSAGE "AT+MGPM"																					//AT+MGPM 
 
 //#define MAX_SIZE_TCP_PRINT 1024
 
