@@ -107,6 +107,7 @@ void ResolveDNS_for_conn2( const char *name, ip_addr_t *ipaddr, void *arg ){
  * 					 <14> Subscribe the Topic
  *  	  			     <15> Change Alias name
  *   	  			     <16> Chat to the alias 
+ * 					 <17> Pull message from microgear buffer to serial
  * 					 
  * 					 
  */ 
