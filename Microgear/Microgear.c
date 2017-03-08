@@ -66,7 +66,6 @@ int microgear_chat(Microgear *mg, char *alias, char *payload) {
 
 int microgear_publish(Microgear *mg, char *topic, char *payload, PubOpt *opt) {
     PubSubQueueMsg data;
-
     data.type= PSQ_PUBLISH;
     data.topic[0] = '/';
     strxcpy(data.topic+1, mg->appid, PUBSUBQUEUE_TOPICSIZE-1);
@@ -86,7 +85,7 @@ int microgear_publish(Microgear *mg, char *topic, char *payload, PubOpt *opt) {
         return -1;
     }
     else {
-        #ifdef _DEBUG_
+        #ifdef _DEBUG_	
             os_printf("Publish Success.\r\n");
         #endif
         return 0;
@@ -157,6 +156,8 @@ LOCAL void ICACHE_FLASH_ATTR defaultMsgHandler(MessageData* md, void *c) {
     }
     else {
         if (mg->cb_message) {
+			//os_printf("\nINSIDE CALL BACK MESSAGE HANDELER\n");
+			
             mg->cb_message(topic,message->payload,message->payloadlen);  
         }
     }
@@ -299,8 +300,10 @@ LOCAL void ICACHE_FLASH_ATTR mqtt_task(void *pvParameters) {
                                     message.retained = msg.flag;
                                     ret = MQTTPublish(&(mg->client), msg.topic, &message);
                                     if (ret != SUCCESS) stopReadQueue = true;
+                                    
                                     break;
                             case PSQ_SUBSCRIBE   :
+									os_printf("Sub success");
                                     ret = MQTTSubscribe(&(mg->client), msg.topic, QOS0, defaultMsgHandler);
                                     if (ret != SUCCESS) stopReadQueue = true;
                                     break;

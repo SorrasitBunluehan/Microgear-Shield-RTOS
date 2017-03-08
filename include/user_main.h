@@ -8,9 +8,10 @@
 #include "lwip/inet.h"
 #include "var.h"
 #include "wifi_task.h"
+#include "error.h"
 
 
-
+#define ECHOMODE "ATE"																									//ATE0 (For turn off echo), ATE1 (Turn on echo)
 #define SETUPWIFI "AT+CW "																								//AT+CW "<SSID>","<PASS>"
 #define CHECKSTATUS_WIFI "AT+CW?"																			//AT+CW?
 #define CONNECT_TO_SERVER1_BY_CLIENT1 "AT+CCS1 "											//AT+CCS1 "<IP>",<PORT>
@@ -34,10 +35,10 @@
 
 
 
-
 #define CONNECT_TO_NETPIE "AT+MGCN"																		//AT+MGCN
+#define CHECKSTATUS_NETPIE "AT+MGCN?"																	//AT+MGCN?
 #define DISCONNECT_FROM_NETPIE "AT+MGDC"															//AT+MGDC  
-#define SETUP_TOKEN "AT+MGST "																					//AT+MGST "RKJy30tYkUKoXa7G","oWfxRNqRaXdwffVdFvuU27qJqr1KNpIy"
+#define SETUP_TOKEN "AT+MGST "																					//AT+MGST "G2cBdDr2ddvkdPkU","KiGmYV1KCUrRj24LTQbyTelC7HnxduCY"
 #define INIT_MICROGEAR "AT+MGIN "																				//AT+MGIN "HelloNetpie1","YhtHPvlmMxL5yJB","YphWgyUI31q8sEMu6qtNrIPn1","Light_control"
 #define SET_ALIAS_NAME "AT+MGSA "																				//AT+MGSA "ALIAS_NEW"
 #define PUBLISH "AT+MGP "																								//AT+MGP "<TOPIC>","<PAYLOAD>"
@@ -45,11 +46,13 @@
 #define UNSUBSCRIBE "AT+MGUS "																					//AT+MGUS "<TOPIC>"
 #define CHAT "AT+MGC "																										//AT+MGC "<ALIAS>","<PAYLOAD>"
 #define PULL_MESSAGE "AT+MGPM"																					//AT+MGPM 
+#define WRITE_FEED "AT+MGWF "																					//AT+MGWF <MODE>,"<FEEDNAME>","<DATA>","<API KEY>" 	
 
+//AT+MGWF 0,"MicrogearShield","{Temp:12}"
+//AT+MGWF 1,"MicrogearShield","{Temp:12}","fA78nqOtzasvAS1xg4MzlnfMn1FKHdUj"
 //#define MAX_SIZE_TCP_PRINT 1024
 
-#define MAX_SIZE_PUBLISH 50
-#define MAX_SIZE_TOPIC 50
+
 
 
 

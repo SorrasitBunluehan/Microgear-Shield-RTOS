@@ -16,9 +16,8 @@ LOCAL void ICACHE_FLASH_ATTR wifi_task(void *pvParameters){
 			sprintf(config->password, password);
 			wifi_station_set_config(config);
 			free(config);
-			
-			
-			os_printf("WiFi: Connecting to WiFi\n");
+		
+			//os_printf("WiFi: Connecting to WiFi\n");
 			wifi_station_connect();
 			
 			status = wifi_station_get_connect_status();

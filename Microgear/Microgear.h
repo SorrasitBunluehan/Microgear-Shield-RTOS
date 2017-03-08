@@ -25,8 +25,10 @@
 #define SUCCESS                     0
 
 
-#define PUBSUBQUEUE_TOPICSIZE         48
-#define PUBSUBQUEUE_PAYLOADSIZE       256
+//~ #define PUBSUBQUEUE_TOPICSIZE         48
+#define PUBSUBQUEUE_TOPICSIZE         128
+#define PUBSUBQUEUE_PAYLOADSIZE       512
+
 #define PUBSUBQUEUE_LENGTH             3
 
 #define APPIDSIZE                  32

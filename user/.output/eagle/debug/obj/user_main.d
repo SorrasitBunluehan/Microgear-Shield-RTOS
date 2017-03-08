@@ -101,4 +101,4 @@
  ../Microgear/MQTTClient/MQTTESP8266.h ../Microgear/base64.h \
  ../include/ringbuf.h \
  /home/moun/ESP8266_RTOS_SDK/include/lwip/ipv4/lwip/inet.h \
- ../include/var.h ../include/wifi_task.h
+ ../include/var.h ../include/wifi_task.h ../include/error.h
