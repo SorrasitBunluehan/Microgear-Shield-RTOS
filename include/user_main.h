@@ -12,6 +12,7 @@
 
 
 #define ECHOMODE "ATE"																									//ATE0 (For turn off echo), ATE1 (Turn on echo)
+#define PUSHMODE "ATP"																										//ATP1 (Push message on),ATP0 (PUSH message off)
 #define SETUPWIFI "AT+CW "																								//AT+CW "<SSID>","<PASS>"
 #define CHECKSTATUS_WIFI "AT+CW?"																			//AT+CW?
 #define CONNECT_TO_SERVER1_BY_CLIENT1 "AT+CCS1 "											//AT+CCS1 "<IP>",<PORT>

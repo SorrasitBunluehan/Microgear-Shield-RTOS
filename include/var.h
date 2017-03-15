@@ -30,6 +30,7 @@ extern xQueueHandle xQueueUART;
  * 	@xQueueHandleUart -> Queue use to handle Uart packet
  * 	@echo_modoe -> Select mode of echo
  */ 
+ 
  char message_sr[200] = "";
  RingBuf *client1_buf,*client2_buf,*mg_buf;
  int param=0;
@@ -37,7 +38,8 @@ extern xQueueHandle xQueueUART;
  xSemaphoreHandle WifiReady,SetWifi;
  uart_event_t xQueueHandleUart;
  Microgear mg;
- int echo_mode;
+ int echo_mode = 1;
+ int push_mode = 1;
 
 /* <|MQTT Variables declaration|>
  *		@str -> MgStruct structure type keep all information of arrival message (topic,msg,msglen)
