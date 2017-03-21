@@ -627,12 +627,14 @@ void read_sr(void *pvParameters) {
 				if(strcmp(message_sr,SECURE_PRINT)==0){
 				}
 					
-				/* 	<| CHECK MICROGEAR STATUS |>	*/
-				if(strcmp(message_sr,CHECKSTATUS_NETPIE)==0){
-					if (microgear_isConnected(&mg)) os_printf("OK\n");
-					else os_printf("Error ");
-					message_index=0;
-				}
+				//Unuseable due to fault detection between AT+MGCN and AT+MGCN? need to solved	
+				//~ /* 	<| CHECK MICROGEAR STATUS |>	*/
+				//~ if(strcmp(message_sr,CHECKSTATUS_NETPIE)==0){
+					//~ os_printf("inside");
+					//~ if (microgear_isConnected(&mg)) os_printf("OK\n");
+					//~ else os_printf("Error ");
+					//~ message_index=0;
+				//~ }
 				
 				/*	<|MICROGEAR CONNECT|> */		
 				if(strcmp(message_sr,CONNECT_TO_NETPIE)==0){	
