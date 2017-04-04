@@ -123,10 +123,12 @@ INCLUDES := $(INCLUDES) -I $(PDIR)include -I $(PDIR)Microgear
 sinclude $(SDK_PATH)/Makefile
 
 
-
 flash:
 	echo $(BIN_PATH)
-	esptool.py --port /dev/ttyUSB0 --baud 115200 write_flash 0x0 $(BIN_PATH)/eagle.flash.bin 0x20000 $(BIN_PATH)/eagle.irom0text.bin
+	esptool.py -p /dev/ttyUSB0 -b 115200 write_flash -ff 80m -fm qio -fs 32m 0x0 $(BIN_PATH)/eagle.flash.bin 0x20000 $(BIN_PATH)/eagle.irom0text.bin
+	#esptool.py -p /dev/ttyACM0 -b 9600 write_flash -ff 80m -fm qio -fs 32m 0x0 $(BIN_PATH)/eagle.flash.bin 0x20000 $(BIN_PATH)/eagle.irom0text.bin
+
+	#esptool.py --port /dev/ttyUSB0 --baud 115200 write_flash 0x0 $(BIN_PATH)/eagle.flash.bin 0x20000 $(BIN_PATH)/eagle.irom0text.bin
 
 .PHONY: FORCE	
 FORCE:

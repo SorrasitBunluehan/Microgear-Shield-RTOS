@@ -105,7 +105,7 @@ void ICACHE_FLASH_ATTR uart0_init(uart_param_t* param)
 
     _xt_isr_unmask(1 << ETS_UART_INUM);  // ETS_UART_INTR_ENABLE();
 
-    xQueueUART = xQueueCreate(500, sizeof(uart_event_t));
+    xQueueUART = xQueueCreate(2048, sizeof(uart_event_t));
 
     portEXIT_CRITICAL();
 }

@@ -11,7 +11,9 @@
 /* <|DATA RECEIVED CALLBACK (FOR CLIENT 1)|> */ 
 void recv_cb1(void *arg, char *pData, unsigned short len){
 	int i;
-	if(push_mode == 1) os_printf("Received data from server 1");
+	if(push_mode == 1) {
+		os_printf("Received data from server 1");
+	}
 	for(i=0;i<len;i++)client1_buf->add(client1_buf,(pData+i));
 }
 
@@ -19,7 +21,9 @@ void recv_cb1(void *arg, char *pData, unsigned short len){
 /* <|DATA RECEIVED CALLBACK (FRO CLIENT 2)|> */ 
 void recv_cb2(void *arg, char *pData, unsigned short len){
 	int i;
-	if(push_mode == 1) os_printf("Received data from server 2");
+	if(push_mode == 1){
+		 os_printf("Received data from server 2");
+	 }
 	for(i=0;i<len;i++)client2_buf->add(client2_buf,(pData+i));
 }
 
@@ -45,7 +49,14 @@ void onMsghandler(char *topic, uint8_t* msg, uint16_t msglen) {
 	strcpy(str.topic,topic);
 	str.msglen = msglen;
 	mg_buf->add(mg_buf,&str);
-    //os_printf("incoming message --> %s : %s\n",str.topic,str.msg);
+   
+   if(push_mode == 1){
+			int buffer_ele = mg_buf->numElements(mg_buf);
+		if(buffer_ele != 0){
+			mg_buf->pull(mg_buf,&str_pull);
+			os_printf("%s:%s\r\n",str_pull.topic,str_pull.msg);
+		}
+	}
 }
 
 /* <|CLIENT1 ERROR CALLBACK|> */
@@ -60,18 +71,24 @@ void errorCB2(void *arg, sint8 err) {
 
 /*	<|CLIENT1 DISCONNECT CALLBACK|> */
 void disconnectCB1(void *arg) {
-	if(push_mode == 1) os_printf("CLIENT1 DISCONN \n");
+	if(push_mode == 1){
+		 os_printf("CLIENT1 DISCONN \n");
+	 }
 	
 }
 
 /*	<|CLIENT1 DISCONNECT CALLBACK|> */
 void disconnectCB2(void *arg) {
-	if(push_mode == 1)  os_printf("CLIENT2 DISCONN\n");
+	if(push_mode == 1){  
+		os_printf("CLIENT2 DISCONN\n");
+	}
 }
 
 /* <|DNS callback for conn1 if there is no maping ip in cache|> */
 void ResolveDNS_for_conn1( const char *name, ip_addr_t *ipaddr, void *arg ){
-	if(push_mode == 1) os_printf("Can't find ip in cache system. Asking from DNS server\n"); 		 
+	if(push_mode == 1) {
+		os_printf("Can't find ip in cache system. Asking from DNS server\n"); 		 
+	}
 
 	if(ipaddr == NULL){
 		switch(push_mode){
@@ -80,7 +97,9 @@ void ResolveDNS_for_conn1( const char *name, ip_addr_t *ipaddr, void *arg ){
 		}
 	}else{
 		memcpy(conn1.proto.tcp->remote_ip, ipaddr, 4);
-		if(push_mode ==1) os_printf("Connecting . . .\n");
+		if(push_mode ==1) {
+			os_printf("Connecting . . .\n");
+		}
 		switch(conn1.state){
 			case ESPCONN_CONNECT: os_printf("Error: %d \n", CONN_NOT_READY_TO_CONNECT); break;
 			case ESPCONN_NONE: espconn_connect(&conn1); break;
@@ -95,7 +114,9 @@ void ResolveDNS_for_conn1( const char *name, ip_addr_t *ipaddr, void *arg ){
 
 /* <|DNS callback for conn2 if there is no maping ip in cache|> */
 void ResolveDNS_for_conn2( const char *name, ip_addr_t *ipaddr, void *arg ){
-	if(push_mode== 1) os_printf("Can't find ip in cache system. Asking from DNS server\n"); 
+	if(push_mode== 1){
+		 os_printf("Can't find ip in cache system. Asking from DNS server\n"); 
+	 }
 			 
 	if(ipaddr == NULL){
 		switch(push_mode){
@@ -104,7 +125,9 @@ void ResolveDNS_for_conn2( const char *name, ip_addr_t *ipaddr, void *arg ){
 		}
 	}else{
 		memcpy(conn2.proto.tcp->remote_ip, ipaddr, 4);
-		if(push_mode ==1) os_printf("Connecting . . .\n");
+		if(push_mode ==1){
+			os_printf("Connecting . . .\n");
+		}
 		switch(conn2.state){
 			case ESPCONN_CONNECT: os_printf("Error: %d \n", CONN_NOT_READY_TO_CONNECT); break;
 			case ESPCONN_NONE: espconn_connect(&conn2); break;
@@ -167,7 +190,7 @@ void read_sr(void *pvParameters) {
 				if(strcmp(message_sr,ECHOMODE)==0){
 					message_index = 0;
 					param = 0;
-					os_printf("Inside echomode\n");
+					os_printf("inside echomode\n");
 						while((xQueueReceive(xQueueUART,(void *)&xQueueHandleUart,0) == pdPASS)   && break_loop == 0 ){	
 						if(xQueueHandleUart.param == 13 ){
 							param++;
@@ -264,7 +287,9 @@ void read_sr(void *pvParameters) {
 									case 3:break;
 									case 4: 										
 										port = atoi(message_sr);		
-										if(echo_mode == 1) os_printf("AT+CCS1 \"%s\",%d ",host,port);
+										if(echo_mode == 1){
+											 os_printf("AT+CCS1 \"%s\",%d ",host,port);
+										 }
 										conn1.proto.tcp->remote_port = port;
 										if(espconn_gethostbyname(&conn1, host, &HostResolve_Ip1, ResolveDNS_for_conn1) == ESPCONN_OK){
 											memcpy(conn1.proto.tcp->remote_ip, &HostResolve_Ip1, 4);
@@ -284,7 +309,7 @@ void read_sr(void *pvParameters) {
 								message_sr[message_index++] = xQueueHandleUart.param;
 								message_sr[message_index]=0;
 							}
-							vTaskDelay(10/ portTICK_RATE_MS);		
+							vTaskDelay(10/ portTICK_RATE_MS);				
 						}
 						message_index=0;
 				}
@@ -305,7 +330,9 @@ void read_sr(void *pvParameters) {
 								case 3: break;
 								case 4: 
 								port = atoi(message_sr);		
-								if(echo_mode == 1) os_printf("AT+CCS2 \"%s\",%d ",host,port);
+								if(echo_mode == 1){
+									 os_printf("AT+CCS2 \"%s\",%d ",host,port);
+								 }
 								conn2.proto.tcp->remote_port = port;
 								if(espconn_gethostbyname(&conn2, host, &HostResolve_Ip2, ResolveDNS_for_conn2) == ESPCONN_OK){
 									memcpy(conn2.proto.tcp->remote_ip, &HostResolve_Ip2, 4);
@@ -325,7 +352,7 @@ void read_sr(void *pvParameters) {
 							message_sr[message_index++] = xQueueHandleUart.param;
 							message_sr[message_index]=0;
 						}
-						vTaskDelay(10/ portTICK_RATE_MS);		
+						vTaskDelay(10/ portTICK_RATE_MS);				
 					}
 					message_index=0;
 				}
@@ -400,7 +427,7 @@ void read_sr(void *pvParameters) {
 							//os_printf("Data is: %c\n",xQueueHandleUart.param);
 							send_buf1[message_index]=0;
 						}
-						vTaskDelay(10/ portTICK_RATE_MS);		
+						vTaskDelay(10/ portTICK_RATE_MS);				
 					}
 					message_index=0;
 				}
@@ -431,7 +458,7 @@ void read_sr(void *pvParameters) {
 							send_buf2[message_index++] = xQueueHandleUart.param;
 							send_buf2[message_index]=0;
 						}
-						vTaskDelay(10/ portTICK_RATE_MS);		
+						vTaskDelay(10/ portTICK_RATE_MS);				
 					}
 					message_index=0;
 				}
@@ -473,7 +500,7 @@ void read_sr(void *pvParameters) {
 							message_sr[message_index++] = xQueueHandleUart.param;
 							message_sr[message_index]=0;
 						}
-						vTaskDelay(10/ portTICK_RATE_MS);		
+						vTaskDelay(10/ portTICK_RATE_MS);				
 					}
 					message_index=0;
 				}
@@ -517,7 +544,7 @@ void read_sr(void *pvParameters) {
 							message_sr[message_index++] = xQueueHandleUart.param;
 							message_sr[message_index]=0;
 						}
-						vTaskDelay(10/ portTICK_RATE_MS);		
+						vTaskDelay(10/ portTICK_RATE_MS);				
 					}
 					message_index=0;
 				}
@@ -559,7 +586,7 @@ void read_sr(void *pvParameters) {
 							message_sr[message_index++] = xQueueHandleUart.param;
 							message_sr[message_index]=0;
 						}
-						vTaskDelay(10/ portTICK_RATE_MS);		
+						vTaskDelay(10/ portTICK_RATE_MS);				
 					}
 					message_index=0;
 				}
@@ -602,7 +629,7 @@ void read_sr(void *pvParameters) {
 							message_sr[message_index++] = xQueueHandleUart.param;
 							message_sr[message_index]=0;
 						}
-						vTaskDelay(10/ portTICK_RATE_MS);		
+						vTaskDelay(10/ portTICK_RATE_MS);				
 					}
 					message_index=0;
 				}
@@ -652,7 +679,6 @@ void read_sr(void *pvParameters) {
 					
 				 /*	<|MICROGEAR SETUP TOKEN|> */
 				if(strcmp(message_sr,SETUP_TOKEN)==0){
-					os_printf("Inside token setup\n");
 					message_index=0;
 					tokensecret[0] = '\0';
 					token[0] = '\0';
@@ -669,7 +695,9 @@ void read_sr(void *pvParameters) {
 								case 4: break;
 								case 5: 
 									strcpy(tokensecret,message_sr);
-									if(push_mode == 1) os_printf("Token: %s\nToken Secret: %s\n",token,tokensecret);
+									if(push_mode == 1){
+										 os_printf("Token: %s\nToken Secret: %s\n",token,tokensecret);
+									 }
 									microgear_setToken(&mg, token, tokensecret, NULL);
 									break_loop = 1;
 									break;
@@ -678,14 +706,13 @@ void read_sr(void *pvParameters) {
 							message_sr[message_index++] = xQueueHandleUart.param;							
 							message_sr[message_index]=0;
 						}
-						vTaskDelay(1/ portTICK_RATE_MS);		
+						vTaskDelay(10/ portTICK_RATE_MS);				
 					}
 					message_index=0;
 				}
 
 				//~ /*	<|MICROGEAR INIT (SETUP APPID,KEY,SECRET,ALIAS)|> */
 				if(strcmp(message_sr,INIT_MICROGEAR)==0){
-					os_printf("Inside init\n");
 					message_index=0;
 					param=0;
 					appid[0] = '\0';
@@ -710,7 +737,9 @@ void read_sr(void *pvParameters) {
 								case 10: break;
 								case 11:
 									strcpy(alias,message_sr);
-									if(push_mode == 1) os_printf("Appid: %s\nKey: %s\nSecret: %s\nAlias: %s\n",appid,key,secret,alias);	
+									if(push_mode == 1){
+										 os_printf("Appid: %s\nKey: %s\nSecret: %s\nAlias: %s\n",appid,key,secret,alias);	
+									 }
 									microgear_init(&mg, key, secret, alias); 
 									break_loop=1;
 									break;
@@ -719,7 +748,7 @@ void read_sr(void *pvParameters) {
 							message_sr[message_index++] = xQueueHandleUart.param;
 							message_sr[message_index]=0;
 						}
-						vTaskDelay(1/ portTICK_RATE_MS);		
+						vTaskDelay(10/ portTICK_RATE_MS);				
 					}
 					message_index=0;
 				}
@@ -736,7 +765,9 @@ void read_sr(void *pvParameters) {
 							switch (param){
 								case 1: break;
 								case 2:	
-									if(push_mode ==1) os_printf("Set alias name to: %s\n",message_sr);
+									if(push_mode ==1){
+										os_printf("Set alias name to: %s\n",message_sr);
+									}
 									microgear_setAlias(&mg, message_sr);	
 									break_loop =1;
 									break;
@@ -745,7 +776,7 @@ void read_sr(void *pvParameters) {
 							message_sr[message_index++] = xQueueHandleUart.param;
 							message_sr[message_index]=0;
 						}
-						vTaskDelay(100/ portTICK_RATE_MS);		
+						vTaskDelay(10/ portTICK_RATE_MS);				
 					}
 					message_index=0;
 				}
@@ -769,7 +800,9 @@ void read_sr(void *pvParameters) {
 								case 4: break;
 								case 5:	
 									strcpy(data_pub,message_sr);
-									if(push_mode ==1) os_printf("Topis is: %s \ndata is: %s\n",topic_pub,message_sr);
+									if(push_mode ==1) {
+										os_printf("Topis is: %s \ndata is: %s\n",topic_pub,message_sr);
+									}
 									microgear_publish(&mg, topic_pub, data_pub, NULL);
 									break_loop =1;
 									break;
@@ -778,7 +811,7 @@ void read_sr(void *pvParameters) {
 							message_sr[message_index++] = xQueueHandleUart.param;
 							message_sr[message_index]=0;
 						}
-						vTaskDelay(10/ portTICK_RATE_MS);		
+						vTaskDelay(10/ portTICK_RATE_MS);				
 					}
 					message_index=0;
 				}
@@ -795,7 +828,9 @@ void read_sr(void *pvParameters) {
 							switch (param){
 								case 1: break;
 								case 2: 
-									if(push_mode ==1) os_printf("Subscribe topic: %s\n",message_sr);
+									if(push_mode ==1) {
+										os_printf("Subscribe topic: %s\n",message_sr);
+									}
 									microgear_subscribe(&mg, message_sr);
 									break_loop=1;
 									break;
@@ -804,7 +839,7 @@ void read_sr(void *pvParameters) {
 							message_sr[message_index++] = xQueueHandleUart.param;
 							message_sr[message_index]=0;
 						}
-						vTaskDelay(10/ portTICK_RATE_MS);		
+						vTaskDelay(10/ portTICK_RATE_MS);				
 					}
 					message_index=0;
 				}
@@ -830,7 +865,7 @@ void read_sr(void *pvParameters) {
 							message_sr[message_index++] = xQueueHandleUart.param;
 							message_sr[message_index]=0;
 						}
-						vTaskDelay(10/ portTICK_RATE_MS);		
+						vTaskDelay(10/ portTICK_RATE_MS);				
 					}
 				message_index=0;
 				}
@@ -858,7 +893,7 @@ void read_sr(void *pvParameters) {
 							message_sr[message_index++] = xQueueHandleUart.param;
 							message_sr[message_index]=0;
 						}
-						vTaskDelay(10/ portTICK_RATE_MS);		
+						vTaskDelay(10/ portTICK_RATE_MS);				
 					}
 					microgear_chat(&mg, device_name, data_chat);
 					message_index=0;
@@ -869,9 +904,7 @@ void read_sr(void *pvParameters) {
 					int buffer_ele = mg_buf->numElements(mg_buf);
 					if(buffer_ele != 0){
 						mg_buf->pull(mg_buf,&str_pull);
-						os_printf("Topic is: %s\n",str_pull.topic);
-						os_printf("Msg is: %s\n",str_pull.msg);
-						os_printf("Size is: %d\n",str_pull.msglen);					
+						os_printf("%s:%s\r\n",str_pull.topic,str_pull.msg);
 					}			
 					message_index=0;				
 				}
@@ -908,17 +941,21 @@ void read_sr(void *pvParameters) {
 							message_sr[message_index++] = xQueueHandleUart.param;
 							message_sr[message_index]=0;
 						}	
-						vTaskDelay(10/ portTICK_RATE_MS);		
+						vTaskDelay(10/ portTICK_RATE_MS);				
 					}
 					strcat(feed_buff,feedname);
-					if(feedmode) strcat(feed_buff,"/"); strcat(feed_buff,apikey);
-					if(push_mode == 1) os_printf("Topis: %s\n",feed_buff);
-					if(push_mode == 1 ) os_printf("Data: %s\n",feeddata);
+					if(feedmode){
+						 strcat(feed_buff,"/"); strcat(feed_buff,apikey);
+					 }
+					if(push_mode == 1) {
+						os_printf("Topis: %s\n",feed_buff);
+						os_printf("Data: %s\n",feeddata);
+					}
 					microgear_publish(&mg, feed_buff, feeddata, NULL);
 					message_index=0;
 				}																				
 			}
-			vTaskDelay(1 / portTICK_RATE_MS);
+			vTaskDelay(10/ portTICK_RATE_MS);
 		}
 		vTaskDelay(1000 / portTICK_RATE_MS);
 	}

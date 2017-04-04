@@ -121,7 +121,9 @@ void *RingBufPull(RingBuf *self, void *object)
 unsigned int RingBufNumElements(RingBuf *self)
 {
 	unsigned int elements;
+
 	elements = self->elements; 
+
 	return elements;
 }
 
